@@ -14,7 +14,7 @@ export const Route = createFileRoute("/dashboard/pins")({
 });
 
 const rand = () =>
-  "SRC-" +
+  "ICA-" +
   Math.random().toString(36).slice(2, 6).toUpperCase() +
   "-" +
   Math.random().toString(36).slice(2, 6).toUpperCase();
