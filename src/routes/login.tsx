@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Sign in — iCademia" }] }),
   component: LoginPage,
 });
 
@@ -30,7 +30,7 @@ function LoginPage() {
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 backdrop-blur">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="font-display text-lg font-semibold">ScholarGrade</span>
+            <span className="font-display text-lg font-semibold">iCademia</span>
           </Link>
           <div>
             <h2 className="font-display text-4xl font-semibold leading-tight">
@@ -40,7 +40,7 @@ function LoginPage() {
               Admins, teachers, and exam officers — sign in to manage students, post scores, and issue PIN batches.
             </p>
           </div>
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} ScholarGrade</p>
+          <p className="text-xs text-white/50">© {new Date().getFullYear()} iCademia</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ function LoginPage() {
               <span className="grid h-9 w-9 place-items-center rounded-lg gradient-primary text-primary-foreground">
                 <GraduationCap className="h-5 w-5" />
               </span>
-              <span className="font-display text-lg font-semibold">ScholarGrade</span>
+              <span className="font-display text-lg font-semibold">iCademia</span>
             </Link>
           </div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">Welcome back</h1>

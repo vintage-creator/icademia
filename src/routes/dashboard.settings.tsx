@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/dashboard/settings")({
-  head: () => ({ meta: [{ title: "Settings — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Settings — iCademia" }] }),
   component: SettingsPage,
 });
 

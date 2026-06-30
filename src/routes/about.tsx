@@ -7,8 +7,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Us — ScholarGrade" },
-      { name: "description", content: "Learn about ScholarGrade, our mission, and our founder Nmesoma Ajaero." },
+      { title: "About Us — iCademia" },
+      { name: "description", content: "Learn about iCademia, our mission, and our founder Nmesoma Ajaero." },
     ],
   }),
   component: AboutPage,
@@ -33,12 +33,12 @@ function AboutPage() {
           <div className="absolute inset-0 gradient-academic" />
           <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
           <div className="relative mx-auto w-full max-w-7xl px-6 py-20 text-center lg:py-28">
-            <p className="text-sm font-medium uppercase tracking-wider text-accent">About ScholarGrade</p>
+            <p className="text-sm font-medium uppercase tracking-wider text-accent">About iCademia</p>
             <h1 className="mx-auto mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight text-primary-foreground sm:text-5xl lg:text-6xl">
               Built by educators,<br />engineered for scale.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-white/75">
-              ScholarGrade is a secure, centralized result management platform designed for primary schools, secondary schools, colleges, and educational institutions across the globe.
+              iCademia is a secure, centralized result management platform designed for primary schools, secondary schools, colleges, and educational institutions across the globe.
             </p>
           </div>
         </section>
@@ -52,7 +52,7 @@ function AboutPage() {
                 Empowering schools with transparent, secure academic records.
               </h2>
               <p className="mt-5 text-muted-foreground leading-relaxed">
-                We believe every student deserves accurate, timely access to their academic performance — and every school deserves a system that makes that effortless. ScholarGrade bridges the gap between administrative efficiency and parent satisfaction by delivering a platform that is both powerful and delightfully simple to use.
+                We believe every student deserves accurate, timely access to their academic performance — and every school deserves a system that makes that effortless. iCademia bridges the gap between administrative efficiency and parent satisfaction by delivering a platform that is both powerful and delightfully simple to use.
               </p>
               <p className="mt-4 text-muted-foreground leading-relaxed">
                 From scratch-card PIN generation to real-time result checking, from bulk uploads to insightful dashboards — we handle the complexity so schools can focus on what matters most: educating the next generation.
@@ -100,7 +100,7 @@ function AboutPage() {
                 </Avatar>
                 <div className="mt-8 text-center lg:text-left">
                   <h2 className="font-display text-3xl font-semibold tracking-tight">Nmesoma Ajaero</h2>
-                  <p className="mt-1 text-primary font-medium">Founder & CEO, ScholarGrade</p>
+                  <p className="mt-1 text-primary font-medium">Founder & CEO, iCademia</p>
                 </div>
               </div>
               <div>
@@ -109,10 +109,10 @@ function AboutPage() {
                   A vision born from the classroom.
                 </h3>
                 <p className="mt-5 text-muted-foreground leading-relaxed">
-                  Nmesoma Ajaero founded ScholarGrade with a clear mission: to eliminate the chaos of paper-based result management and give every school a secure, digital alternative. With a deep background in education technology and a passion for student success, she saw firsthand how delays, errors, and insecure processes were undermining trust between schools and families.
+                  Nmesoma Ajaero founded iCademia with a clear mission: to eliminate the chaos of paper-based result management and give every school a secure, digital alternative. With a deep background in education technology and a passion for student success, she saw firsthand how delays, errors, and insecure processes were undermining trust between schools and families.
                 </p>
                 <p className="mt-4 text-muted-foreground leading-relaxed">
-                  Under her leadership, ScholarGrade has grown from a simple result-checker into a full-stack academic management platform — serving schools with tools for grading, PIN issuance, analytics, and parent communication. Nmesoma remains deeply involved in product strategy, ensuring every feature reflects the real-world needs of educators and administrators.
+                  Under her leadership, iCademia has grown from a simple result-checker into a full-stack academic management platform — serving schools with tools for grading, PIN issuance, analytics, and parent communication. Nmesoma remains deeply involved in product strategy, ensuring every feature reflects the real-world needs of educators and administrators.
                 </p>
                 <blockquote className="mt-6 border-l-4 border-accent bg-accent/5 pl-5 py-3 rounded-r-lg">
                   <p className="italic text-foreground/90">

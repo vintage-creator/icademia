@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { STATS, MOCK_STUDENTS, MOCK_PINS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard/")({
-  head: () => ({ meta: [{ title: "Dashboard — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — iCademia" }] }),
   component: Overview,
 });
 
@@ -19,7 +19,7 @@ const activity = [
   { who: "Mr. Femi (Teacher)", what: "uploaded scores for JSS 2 — Mathematics", when: "12 min ago" },
   { who: "Mrs. Adekunle", what: "generated 200 PIN cards (Batch #B-104)", when: "2 hours ago" },
   { who: "System", what: "term average recomputed for SS 1 Sapphire", when: "5 hours ago" },
-  { who: "Mr. Okafor", what: "revoked PIN SRC-5B6Q-08F9", when: "Yesterday" },
+  { who: "Mr. Okafor", what: "revoked PIN ICA-5B6Q-08F9", when: "Yesterday" },
 ];
 
 function Overview() {

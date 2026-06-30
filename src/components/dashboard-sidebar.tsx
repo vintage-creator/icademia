@@ -1,13 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LayoutDashboard, Users, Upload, KeyRound, Settings, LogOut, BookOpen } from "lucide-react";
+import { Sparkles, LayoutDashboard, Users, Upload, KeyRound, Settings, LogOut, BookOpen, UserCog, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const items = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/dashboard/students", label: "Students", icon: Users },
+  { to: "/dashboard/teachers", label: "Teachers", icon: UserCog },
   { to: "/dashboard/results", label: "Upload Results", icon: Upload },
   { to: "/dashboard/pins", label: "PIN Cards", icon: KeyRound },
   { to: "/dashboard/classes", label: "Classes & Terms", icon: BookOpen },
+  { to: "/wall-of-fame", label: "Wall of Fame", icon: Trophy },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -17,14 +20,14 @@ export function DashboardSidebar() {
     <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-6">
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar-accent">
-          <GraduationCap className="h-5 w-5 text-sidebar-primary" />
+          <Sparkles className="h-5 w-5 text-sidebar-primary" />
         </span>
         <div>
-          <p className="font-display text-sm font-semibold">ScholarGrade</p>
+          <p className="font-display text-sm font-bold">iCademia</p>
           <p className="text-[11px] text-sidebar-foreground/60">Brightfield Comp.</p>
         </div>
       </div>
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map((it) => {
           const active = path === it.to;
           return (
@@ -52,7 +55,11 @@ export function DashboardSidebar() {
             <p className="truncate text-sm font-medium">Amaka O.</p>
             <p className="truncate text-[11px] text-sidebar-foreground/60">Administrator</p>
           </div>
-          <Link to="/" className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
+          <Link
+            to="/"
+            onClick={() => toast.success("Signed out", { description: "You have been logged out (demo)." })}
+            className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          >
             <LogOut className="h-4 w-4" />
           </Link>
         </div>

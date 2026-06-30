@@ -3,7 +3,7 @@ import { BookOpen, CalendarRange, Users2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/dashboard/classes")({
-  head: () => ({ meta: [{ title: "Classes & Terms — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Classes & Terms — iCademia" }] }),
   component: ClassesPage,
 });
 

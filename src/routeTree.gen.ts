@@ -9,18 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WallOfFameRouteImport } from './routes/wall-of-fame'
+import { Route as RegisterSchoolRouteImport } from './routes/register-school'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as CheckResultRouteImport } from './routes/check-result'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardTeachersRouteImport } from './routes/dashboard.teachers'
 import { Route as DashboardStudentsRouteImport } from './routes/dashboard.students'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardResultsRouteImport } from './routes/dashboard.results'
 import { Route as DashboardPinsRouteImport } from './routes/dashboard.pins'
 import { Route as DashboardClassesRouteImport } from './routes/dashboard.classes'
 
+const WallOfFameRoute = WallOfFameRouteImport.update({
+  id: '/wall-of-fame',
+  path: '/wall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterSchoolRoute = RegisterSchoolRouteImport.update({
+  id: '/register-school',
+  path: '/register-school',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -29,6 +43,11 @@ const LoginRoute = LoginRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckResultRoute = CheckResultRouteImport.update({
@@ -49,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTeachersRoute = DashboardTeachersRouteImport.update({
+  id: '/teachers',
+  path: '/teachers',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardStudentsRoute = DashboardStudentsRouteImport.update({
@@ -81,25 +105,33 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
+  '/competitions': typeof CompetitionsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
+  '/register-school': typeof RegisterSchoolRoute
+  '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/classes': typeof DashboardClassesRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/results': typeof DashboardResultsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
+  '/competitions': typeof CompetitionsRoute
   '/login': typeof LoginRoute
+  '/register-school': typeof RegisterSchoolRoute
+  '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/classes': typeof DashboardClassesRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/results': typeof DashboardResultsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -107,13 +139,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
+  '/competitions': typeof CompetitionsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
+  '/register-school': typeof RegisterSchoolRoute
+  '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/classes': typeof DashboardClassesRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/results': typeof DashboardResultsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/students': typeof DashboardStudentsRoute
+  '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -122,38 +158,50 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/check-result'
+    | '/competitions'
     | '/dashboard'
     | '/login'
+    | '/register-school'
+    | '/wall-of-fame'
     | '/dashboard/classes'
     | '/dashboard/pins'
     | '/dashboard/results'
     | '/dashboard/settings'
     | '/dashboard/students'
+    | '/dashboard/teachers'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/check-result'
+    | '/competitions'
     | '/login'
+    | '/register-school'
+    | '/wall-of-fame'
     | '/dashboard/classes'
     | '/dashboard/pins'
     | '/dashboard/results'
     | '/dashboard/settings'
     | '/dashboard/students'
+    | '/dashboard/teachers'
     | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/check-result'
+    | '/competitions'
     | '/dashboard'
     | '/login'
+    | '/register-school'
+    | '/wall-of-fame'
     | '/dashboard/classes'
     | '/dashboard/pins'
     | '/dashboard/results'
     | '/dashboard/settings'
     | '/dashboard/students'
+    | '/dashboard/teachers'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -161,12 +209,29 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CheckResultRoute: typeof CheckResultRoute
+  CompetitionsRoute: typeof CompetitionsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RegisterSchoolRoute: typeof RegisterSchoolRoute
+  WallOfFameRoute: typeof WallOfFameRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wall-of-fame': {
+      id: '/wall-of-fame'
+      path: '/wall-of-fame'
+      fullPath: '/wall-of-fame'
+      preLoaderRoute: typeof WallOfFameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register-school': {
+      id: '/register-school'
+      path: '/register-school'
+      fullPath: '/register-school'
+      preLoaderRoute: typeof RegisterSchoolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -179,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/check-result': {
@@ -207,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/teachers': {
+      id: '/dashboard/teachers'
+      path: '/teachers'
+      fullPath: '/dashboard/teachers'
+      preLoaderRoute: typeof DashboardTeachersRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/students': {
@@ -253,6 +332,7 @@ interface DashboardRouteChildren {
   DashboardResultsRoute: typeof DashboardResultsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardStudentsRoute: typeof DashboardStudentsRoute
+  DashboardTeachersRoute: typeof DashboardTeachersRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -262,6 +342,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardResultsRoute: DashboardResultsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardStudentsRoute: DashboardStudentsRoute,
+  DashboardTeachersRoute: DashboardTeachersRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
@@ -273,19 +354,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CheckResultRoute: CheckResultRoute,
+  CompetitionsRoute: CompetitionsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   LoginRoute: LoginRoute,
+  RegisterSchoolRoute: RegisterSchoolRoute,
+  WallOfFameRoute: WallOfFameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

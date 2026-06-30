@@ -12,7 +12,7 @@ import { PIN_DB, DEMO_RESULT, type StudentResult } from "@/lib/mock-data";
 export const Route = createFileRoute("/check-result")({
   head: () => ({
     meta: [
-      { title: "Check Result — ScholarGrade" },
+      { title: "Check Result — iCademia" },
       { name: "description", content: "Enter your scratch-card PIN and registration number to view your term result instantly." },
     ],
   }),
@@ -69,7 +69,7 @@ function CheckResult() {
                 <form onSubmit={submit} className="space-y-5">
                   <div>
                     <Label htmlFor="pin">Scratch-card PIN</Label>
-                    <Input id="pin" placeholder="SRC-XXXX-XXXX" value={pin} onChange={(e) => setPin(e.target.value)} className="mt-2 font-mono uppercase tracking-wider" required />
+                    <Input id="pin" placeholder="ICA-XXXX-XXXX" value={pin} onChange={(e) => setPin(e.target.value)} className="mt-2 font-mono uppercase tracking-wider" required />
                   </div>
                   <div>
                     <Label htmlFor="reg">Registration number</Label>

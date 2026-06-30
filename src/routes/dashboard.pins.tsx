@@ -9,12 +9,12 @@ import { MOCK_PINS, type PinCard } from "@/lib/mock-data";
 import { StatusPill } from "./dashboard.index";
 
 export const Route = createFileRoute("/dashboard/pins")({
-  head: () => ({ meta: [{ title: "PIN Cards — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "PIN Cards — iCademia" }] }),
   component: PinsPage,
 });
 
 const rand = () =>
-  "SRC-" +
+  "ICA-" +
   Math.random().toString(36).slice(2, 6).toUpperCase() +
   "-" +
   Math.random().toString(36).slice(2, 6).toUpperCase();
