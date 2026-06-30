@@ -9,7 +9,7 @@ import { MOCK_PINS, type PinCard } from "@/lib/mock-data";
 import { StatusPill } from "./dashboard.index";
 
 export const Route = createFileRoute("/dashboard/pins")({
-  head: () => ({ meta: [{ title: "PIN Cards — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "PIN Cards — iCademia" }] }),
   component: PinsPage,
 });
 

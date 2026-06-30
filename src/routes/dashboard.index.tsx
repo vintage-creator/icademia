@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { STATS, MOCK_STUDENTS, MOCK_PINS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard/")({
-  head: () => ({ meta: [{ title: "Dashboard — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — iCademia" }] }),
   component: Overview,
 });
 

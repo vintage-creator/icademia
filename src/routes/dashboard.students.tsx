@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MOCK_STUDENTS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard/students")({
-  head: () => ({ meta: [{ title: "Students — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Students — iCademia" }] }),
   component: StudentsPage,
 });
 

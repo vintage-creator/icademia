@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { gradeFor, MOCK_STUDENTS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard/results")({
-  head: () => ({ meta: [{ title: "Upload Results — ScholarGrade" }] }),
+  head: () => ({ meta: [{ title: "Upload Results — iCademia" }] }),
   component: ResultsPage,
 });
 

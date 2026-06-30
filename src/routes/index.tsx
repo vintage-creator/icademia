@@ -7,9 +7,9 @@ import { SiteFooter } from "@/components/site-footer";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ScholarGrade — Secure School Result Management" },
+      { title: "iCademia — Secure School Result Management" },
       { name: "description", content: "Manage student records, upload results, issue scratch-card PINs, and let parents check results online — all in one secure platform." },
-      { property: "og:title", content: "ScholarGrade — Secure School Result Management" },
+      { property: "og:title", content: "iCademia — Secure School Result Management" },
       { property: "og:description", content: "A centralized, encrypted result management platform for primary, secondary, and tertiary institutions." },
     ],
   }),
@@ -117,7 +117,7 @@ function Landing() {
         {/* Features */}
         <section className="mx-auto w-full max-w-7xl px-6 py-24">
           <div className="max-w-2xl">
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">Why ScholarGrade</p>
+            <p className="text-sm font-medium uppercase tracking-wider text-primary">Why iCademia</p>
             <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight">Built for the realities of running a school.</h2>
             <p className="mt-4 text-muted-foreground">From staff workflows to parent communication — every piece is designed to feel calm and trustworthy.</p>
           </div>

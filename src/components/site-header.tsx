@@ -21,7 +21,7 @@ export function SiteHeader() {
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </span>
           <span className="font-display text-lg font-semibold tracking-tight">
-            ScholarGrade
+            iCademia
           </span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">

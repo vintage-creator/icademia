@@ -52,7 +52,7 @@ const buildSubjects = (): SubjectScore[] =>
   });
 
 export const DEMO_RESULT: StudentResult = {
-  pin: "SRC-7F4A-29B1",
+  pin: "ICA-7F4A-29B1",
   regNumber: "BHS/2025/0142",
   studentName: "Adaeze Okonkwo",
   className: "JSS 2 - Diamond",
@@ -81,12 +81,12 @@ export interface PinCard {
 }
 
 export const MOCK_PINS: PinCard[] = [
-  { id: "1", pin: "SRC-7F4A-29B1", serial: "SN-100001", status: "Used", generatedAt: "2025-05-10", usedBy: "BHS/2025/0142" },
-  { id: "2", pin: "SRC-9K2D-44C8", serial: "SN-100002", status: "Unused", generatedAt: "2025-05-10" },
-  { id: "3", pin: "SRC-3M8X-71E2", serial: "SN-100003", status: "Unused", generatedAt: "2025-05-10" },
-  { id: "4", pin: "SRC-5B6Q-08F9", serial: "SN-100004", status: "Revoked", generatedAt: "2025-05-09" },
-  { id: "5", pin: "SRC-1A0Z-92H4", serial: "SN-100005", status: "Unused", generatedAt: "2025-05-09" },
-  { id: "6", pin: "SRC-8T2P-63J5", serial: "SN-100006", status: "Used", generatedAt: "2025-05-08", usedBy: "BHS/2025/0118" },
+  { id: "1", pin: "ICA-7F4A-29B1", serial: "SN-100001", status: "Used", generatedAt: "2025-05-10", usedBy: "BHS/2025/0142" },
+  { id: "2", pin: "ICA-9K2D-44C8", serial: "SN-100002", status: "Unused", generatedAt: "2025-05-10" },
+  { id: "3", pin: "ICA-3M8X-71E2", serial: "SN-100003", status: "Unused", generatedAt: "2025-05-10" },
+  { id: "4", pin: "ICA-5B6Q-08F9", serial: "SN-100004", status: "Revoked", generatedAt: "2025-05-09" },
+  { id: "5", pin: "ICA-1A0Z-92H4", serial: "SN-100005", status: "Unused", generatedAt: "2025-05-09" },
+  { id: "6", pin: "ICA-8T2P-63J5", serial: "SN-100006", status: "Used", generatedAt: "2025-05-08", usedBy: "BHS/2025/0118" },
 ];
 
 export const MOCK_STUDENTS = [

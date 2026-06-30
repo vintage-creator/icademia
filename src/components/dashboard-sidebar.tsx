@@ -20,7 +20,7 @@ export function DashboardSidebar() {
           <GraduationCap className="h-5 w-5 text-sidebar-primary" />
         </span>
         <div>
-          <p className="font-display text-sm font-semibold">ScholarGrade</p>
+          <p className="font-display text-sm font-semibold">iCademia</p>
           <p className="text-[11px] text-sidebar-foreground/60">Brightfield Comp.</p>
         </div>
       </div>

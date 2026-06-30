@@ -12,7 +12,7 @@ import { PIN_DB, DEMO_RESULT, type StudentResult } from "@/lib/mock-data";
 export const Route = createFileRoute("/check-result")({
   head: () => ({
     meta: [
-      { title: "Check Result — ScholarGrade" },
+      { title: "Check Result — iCademia" },
       { name: "description", content: "Enter your scratch-card PIN and registration number to view your term result instantly." },
     ],
   }),
