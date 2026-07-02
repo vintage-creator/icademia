@@ -13,6 +13,7 @@ import { Route as WallOfFameRouteImport } from './routes/wall-of-fame'
 import { Route as RegisterSchoolRouteImport } from './routes/register-school'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConferencesRouteImport } from './routes/conferences'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as CheckResultRouteImport } from './routes/check-result'
 import { Route as AboutRouteImport } from './routes/about'
@@ -43,6 +44,11 @@ const LoginRoute = LoginRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConferencesRoute = ConferencesRouteImport.update({
+  id: '/conferences',
+  path: '/conferences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompetitionsRoute = CompetitionsRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
+  '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/register-school': typeof RegisterSchoolRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
+  '/conferences': typeof ConferencesRoute
   '/login': typeof LoginRoute
   '/register-school': typeof RegisterSchoolRoute
   '/wall-of-fame': typeof WallOfFameRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
+  '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/register-school': typeof RegisterSchoolRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/check-result'
     | '/competitions'
+    | '/conferences'
     | '/dashboard'
     | '/login'
     | '/register-school'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/check-result'
     | '/competitions'
+    | '/conferences'
     | '/login'
     | '/register-school'
     | '/wall-of-fame'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/check-result'
     | '/competitions'
+    | '/conferences'
     | '/dashboard'
     | '/login'
     | '/register-school'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CheckResultRoute: typeof CheckResultRoute
   CompetitionsRoute: typeof CompetitionsRoute
+  ConferencesRoute: typeof ConferencesRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterSchoolRoute: typeof RegisterSchoolRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conferences': {
+      id: '/conferences'
+      path: '/conferences'
+      fullPath: '/conferences'
+      preLoaderRoute: typeof ConferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/competitions': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CheckResultRoute: CheckResultRoute,
   CompetitionsRoute: CompetitionsRoute,
+  ConferencesRoute: ConferencesRoute,
   DashboardRoute: DashboardRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterSchoolRoute: RegisterSchoolRoute,
