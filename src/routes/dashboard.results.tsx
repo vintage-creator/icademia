@@ -19,15 +19,25 @@ export const Route = createFileRoute("/dashboard/results")({
 
 const SUBJECTS = ["Mathematics", "English Language", "Basic Science", "Social Studies", "Civic Education", "Computer Studies", "Agricultural Sci.", "Creative Arts"];
 
+import { DEMO_ANSWER_SCRIPTS } from "@/lib/mock-data";
+import { FileText, Info } from "lucide-react";
+
+const DEMO_PRELOADED: DroppedFile[] = DEMO_ANSWER_SCRIPTS.map((f) => ({ id: f.id, name: f.name, size: 0, type: "application/pdf" }));
+
 function ResultsPage() {
   const [student, setStudent] = useState(MOCK_STUDENTS[0].reg);
   const [scores, setScores] = useState<Record<string, { ca: string; exam: string }>>(
     Object.fromEntries(SUBJECTS.map((s) => [s, { ca: "", exam: "" }]))
   );
   const [saved, setSaved] = useState(false);
-  const [answerScripts, setAnswerScripts] = useState<DroppedFile[]>([]);
+  const [answerScripts, setAnswerScripts] = useState<DroppedFile[]>(DEMO_PRELOADED);
   const [testimonials, setTestimonials] = useState<DroppedFile[]>([]);
   const [transcripts, setTranscripts] = useState<DroppedFile[]>([]);
+
+  const currentStudent = MOCK_STUDENTS.find((s) => s.reg === student);
+  const className = currentStudent?.class ?? "";
+  const isSS3 = /SS\s?3/i.test(className);
+  const isSecondary = /SS\s?\d|JSS\s?\d/i.test(className);
 
   const set = (s: string, k: "ca" | "exam", v: string) =>
     setScores((p) => ({ ...p, [s]: { ...p[s], [k]: v.replace(/[^0-9]/g, "") } }));
@@ -37,7 +47,7 @@ function ResultsPage() {
     setSaved(true);
     const total = answerScripts.length + testimonials.length + transcripts.length;
     toast.success("Result published", {
-      description: `Scores for ${MOCK_STUDENTS.find(s => s.reg === student)?.name} saved${total ? ` · ${total} document${total > 1 ? "s" : ""} attached` : ""} (demo).`,
+      description: `Scores for ${currentStudent?.name} saved${total ? ` · ${total} document${total > 1 ? "s" : ""} attached` : ""} (demo).`,
     });
     setTimeout(() => setSaved(false), 2400);
   };

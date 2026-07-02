@@ -81,7 +81,7 @@ function RegisterSchool() {
               <h2 className="font-display text-xl font-bold">Tell us about your school</h2>
               <p className="mt-1 text-sm text-muted-foreground">Your administrator account is created on submit. Teachers are added from inside the dashboard.</p>
               <form onSubmit={submit} className="mt-6 grid gap-4 sm:grid-cols-2">
-                <Field label="School name" placeholder="Brightfield Comprehensive School" required />
+                <Field label="School name" placeholder="Britarch Secondary School" required />
                 <div>
                   <Label>School type</Label>
                   <Select defaultValue="secondary">

@@ -73,7 +73,7 @@ function CheckResult() {
                   </div>
                   <div>
                     <Label htmlFor="reg">Registration number</Label>
-                    <Input id="reg" placeholder="BHS/2025/0142" value={reg} onChange={(e) => setReg(e.target.value)} className="mt-2 font-mono uppercase" required />
+                    <Input id="reg" placeholder="BSS/2025/0142" value={reg} onChange={(e) => setReg(e.target.value)} className="mt-2 font-mono uppercase" required />
                   </div>
                   {error && (
                     <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>

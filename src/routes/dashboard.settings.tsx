@@ -21,10 +21,10 @@ function SettingsPage() {
       <Card className="border-border p-6 shadow-card">
         <h2 className="font-display text-lg font-semibold">School profile</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div><Label>School name</Label><Input defaultValue="Brightfield Comprehensive School" className="mt-2" /></div>
+          <div><Label>School name</Label><Input defaultValue="Britarch Secondary School" className="mt-2" /></div>
           <div><Label>Motto</Label><Input defaultValue="Knowledge · Integrity · Service" className="mt-2" /></div>
           <div><Label>Address</Label><Input defaultValue="14 Akin Adesola Street, Victoria Island" className="mt-2" /></div>
-          <div><Label>Contact email</Label><Input defaultValue="admin@brightfield.edu" className="mt-2" /></div>
+          <div><Label>Contact email</Label><Input defaultValue="admin@britarch.edu" className="mt-2" /></div>
         </div>
       </Card>
 
