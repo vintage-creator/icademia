@@ -86,10 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "iCademia — The home of school excellence" },
       { name: "twitter:description", content: "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d3c14657-c0a9-4e1e-8483-f5959432e66b/id-preview-0ca5839b--1b33292c-b942-47d0-9add-983aa84c58d0.lovable.app-1782815439187.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d3c14657-c0a9-4e1e-8483-f5959432e66b/id-preview-0ca5839b--1b33292c-b942-47d0-9add-983aa84c58d0.lovable.app-1782815439187.png" },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: "/icademia-logo.png" },
+      { rel: "apple-touch-icon", href: "/icademia-logo.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" },

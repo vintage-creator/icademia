@@ -19,15 +19,25 @@ export const Route = createFileRoute("/dashboard/results")({
 
 const SUBJECTS = ["Mathematics", "English Language", "Basic Science", "Social Studies", "Civic Education", "Computer Studies", "Agricultural Sci.", "Creative Arts"];
 
+import { DEMO_ANSWER_SCRIPTS } from "@/lib/mock-data";
+import { FileText, Info } from "lucide-react";
+
+const DEMO_PRELOADED: DroppedFile[] = DEMO_ANSWER_SCRIPTS.map((f) => ({ id: f.id, name: f.name, size: 0, type: "application/pdf" }));
+
 function ResultsPage() {
   const [student, setStudent] = useState(MOCK_STUDENTS[0].reg);
   const [scores, setScores] = useState<Record<string, { ca: string; exam: string }>>(
     Object.fromEntries(SUBJECTS.map((s) => [s, { ca: "", exam: "" }]))
   );
   const [saved, setSaved] = useState(false);
-  const [answerScripts, setAnswerScripts] = useState<DroppedFile[]>([]);
+  const [answerScripts, setAnswerScripts] = useState<DroppedFile[]>(DEMO_PRELOADED);
   const [testimonials, setTestimonials] = useState<DroppedFile[]>([]);
   const [transcripts, setTranscripts] = useState<DroppedFile[]>([]);
+
+  const currentStudent = MOCK_STUDENTS.find((s) => s.reg === student);
+  const className = currentStudent?.class ?? "";
+  const isSS3 = /SS\s?3/i.test(className);
+  const isSecondary = /SS\s?\d|JSS\s?\d/i.test(className);
 
   const set = (s: string, k: "ca" | "exam", v: string) =>
     setScores((p) => ({ ...p, [s]: { ...p[s], [k]: v.replace(/[^0-9]/g, "") } }));
@@ -37,7 +47,7 @@ function ResultsPage() {
     setSaved(true);
     const total = answerScripts.length + testimonials.length + transcripts.length;
     toast.success("Result published", {
-      description: `Scores for ${MOCK_STUDENTS.find(s => s.reg === student)?.name} saved${total ? ` · ${total} document${total > 1 ? "s" : ""} attached` : ""} (demo).`,
+      description: `Scores for ${currentStudent?.name} saved${total ? ` · ${total} document${total > 1 ? "s" : ""} attached` : ""} (demo).`,
     });
     setTimeout(() => setSaved(false), 2400);
   };
@@ -45,10 +55,10 @@ function ResultsPage() {
   const saveDraft = () => toast("Draft saved", { description: "You can resume editing later." });
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <header>
-        <h1 className="font-display text-3xl font-bold tracking-tight">Upload results</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Enter scores, attach answer scripts, testimonials and transcripts. Grades compute automatically.</p>
+        <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Upload results</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Enter scores and attach supporting documents. Grades compute automatically.</p>
       </header>
 
       <form onSubmit={handleSave} className="space-y-6">
@@ -146,33 +156,49 @@ function ResultsPage() {
               />
             </Card>
 
-            <Card className="border-border p-6 shadow-card">
-              <div className="mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-lg font-semibold">Testimonials</h2>
-              </div>
-              <FileDrop
-                label="Drop testimonial letters here"
-                hint="Signed character or leaving testimonials issued by the school. PDF preferred."
-                accept=".pdf,.doc,.docx,image/*"
-                files={testimonials}
-                onChange={setTestimonials}
-              />
-            </Card>
+            {isSecondary ? (
+              <Card className="border-border p-6 shadow-card">
+                <div className="mb-1 flex items-center gap-2">
+                  <Award className="h-5 w-5 text-primary" />
+                  <h2 className="font-display text-lg font-semibold">Testimonials</h2>
+                  <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Optional</span>
+                </div>
+                <p className="mb-4 text-xs text-muted-foreground">Character or leaving testimonials — usually issued in SS 3 or on request.</p>
+                <FileDrop
+                  label="Drop testimonial letters here"
+                  hint="Signed testimonials. PDF preferred."
+                  accept=".pdf,.doc,.docx,image/*"
+                  files={testimonials}
+                  onChange={setTestimonials}
+                />
+              </Card>
+            ) : null}
 
-            <Card className="border-border p-6 shadow-card">
-              <div className="mb-4 flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-lg font-semibold">Transcripts</h2>
-              </div>
-              <FileDrop
-                label="Drop transcripts here"
-                hint="Full academic transcripts across sessions. PDF, DOC or spreadsheet."
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"
-                files={transcripts}
-                onChange={setTranscripts}
-              />
-            </Card>
+            {isSS3 ? (
+              <Card className="border-2 border-accent/40 bg-accent/5 p-6 shadow-card">
+                <div className="mb-1 flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <h2 className="font-display text-lg font-semibold">Academic transcript</h2>
+                  <span className="ml-auto rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground">SS 3 · Recommended</span>
+                </div>
+                <p className="mb-4 text-xs text-muted-foreground">Final-year students need a full transcript spanning SS 1–3 for tertiary applications.</p>
+                <FileDrop
+                  label="Drop transcript here"
+                  hint="Full academic transcript across SS 1–3. PDF or spreadsheet."
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"
+                  files={transcripts}
+                  onChange={setTranscripts}
+                />
+              </Card>
+            ) : (
+              <Card className="border-dashed border-border bg-muted/30 p-6 text-center">
+                <FileText className="mx-auto h-6 w-6 text-muted-foreground" />
+                <p className="mt-3 text-sm font-medium">Transcripts aren't required for this class</p>
+                <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5" /> Transcripts are usually issued in SS 3 for tertiary applications.
+                </p>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
 
