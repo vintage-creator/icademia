@@ -7,16 +7,18 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "../components/ui/sonner";
+import { BrandLink } from "../components/brand-link";
+import { SessionTimeoutProvider } from "../components/session-timeout-provider";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#f4f7fb] px-4">
       <div className="max-w-md text-center">
+        <BrandLink compact className="mb-8 justify-center" />
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -38,13 +40,10 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#f4f7fb] px-4">
       <div className="max-w-md text-center">
+        <BrandLink compact className="mb-8 justify-center" />
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
         </h1>
@@ -79,20 +78,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "iCademia — The home of school excellence" },
-      { name: "description", content: "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame." },
+      {
+        name: "description",
+        content:
+          "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame.",
+      },
       { property: "og:title", content: "iCademia — The home of school excellence" },
-      { property: "og:description", content: "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame." },
+      {
+        property: "og:description",
+        content:
+          "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "iCademia — The home of school excellence" },
-      { name: "twitter:description", content: "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame." },
+      {
+        name: "twitter:description",
+        content:
+          "iCademia connects schools, students and parents. Manage results, run competitions, and celebrate top performers on our virtual Wall of Fame.",
+      },
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/icademia-logo.png" },
       { rel: "apple-touch-icon", href: "/icademia-logo.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -121,8 +135,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SessionTimeoutProvider>
+        <Outlet />
+      </SessionTimeoutProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

@@ -7,6 +7,7 @@ export interface DroppedFile {
   name: string;
   size: number;
   type: string;
+  rawFile?: File;
 }
 
 export function FileDrop({
@@ -32,6 +33,7 @@ export function FileDrop({
       name: f.name,
       size: f.size,
       type: f.type || "file",
+      rawFile: f,
     }));
     onChange([...files, ...next]);
   };

@@ -73,7 +73,7 @@
   --secondary-foreground: oklch(0.25 0.05 265);
 
   --muted: oklch(0.96 0.008 250);
-  --muted-foreground: oklch(0.50 0.025 255);
+  --muted-foreground: oklch(0.5 0.025 255);
 
   --success: oklch(0.65 0.15 155);
   --success-foreground: oklch(0.99 0.005 155);
@@ -81,20 +81,20 @@
   --warning: oklch(0.78 0.15 70);
   --warning-foreground: oklch(0.25 0.06 60);
 
-  --destructive: oklch(0.60 0.22 25);
+  --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0.005 25);
 
   --border: oklch(0.92 0.01 255);
   --input: oklch(0.92 0.01 255);
   --ring: oklch(0.55 0.18 265);
 
-  --sidebar: oklch(0.20 0.05 265);
+  --sidebar: oklch(0.2 0.05 265);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.78 0.14 75);
-  --sidebar-primary-foreground: oklch(0.20 0.05 265);
+  --sidebar-primary-foreground: oklch(0.2 0.05 265);
   --sidebar-accent: oklch(0.28 0.06 265);
   --sidebar-accent-foreground: oklch(0.98 0.005 250);
-  --sidebar-border: oklch(0.30 0.06 265);
+  --sidebar-border: oklch(0.3 0.06 265);
   --sidebar-ring: oklch(0.55 0.18 265);
 }
 
@@ -105,29 +105,37 @@
   --card-foreground: oklch(0.97 0.005 250);
   --popover: oklch(0.18 0.04 260);
   --popover-foreground: oklch(0.97 0.005 250);
-  --primary: oklch(0.70 0.16 265);
+  --primary: oklch(0.7 0.16 265);
   --primary-foreground: oklch(0.14 0.03 260);
   --primary-glow: oklch(0.78 0.15 265);
   --secondary: oklch(0.24 0.04 260);
   --secondary-foreground: oklch(0.97 0.005 250);
   --muted: oklch(0.24 0.04 260);
-  --muted-foreground: oklch(0.70 0.02 255);
+  --muted-foreground: oklch(0.7 0.02 255);
   --accent: oklch(0.78 0.14 75);
   --accent-foreground: oklch(0.18 0.04 260);
   --border: oklch(0.28 0.04 260);
   --input: oklch(0.28 0.04 260);
-  --ring: oklch(0.70 0.16 265);
+  --ring: oklch(0.7 0.16 265);
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
 }
 
 @utility gradient-primary {
@@ -137,11 +145,274 @@
   background-image:
     radial-gradient(at 20% 10%, oklch(0.55 0.18 265 / 0.25) 0, transparent 50%),
     radial-gradient(at 80% 0%, oklch(0.78 0.14 75 / 0.18) 0, transparent 50%),
-    linear-gradient(180deg, oklch(0.20 0.05 265) 0%, oklch(0.14 0.04 270) 100%);
+    linear-gradient(180deg, oklch(0.2 0.05 265) 0%, oklch(0.14 0.04 270) 100%);
 }
 @utility shadow-elegant {
   box-shadow: 0 10px 40px -10px color-mix(in oklab, var(--primary) 25%, transparent);
 }
 @utility shadow-card {
-  box-shadow: 0 1px 2px oklch(0.20 0.05 265 / 0.06), 0 8px 24px -12px oklch(0.20 0.05 265 / 0.12);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.05 265 / 0.06),
+    0 8px 24px -12px oklch(0.2 0.05 265 / 0.12);
 }
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(-0.5deg);
+  }
+}
+
+@keyframes hero-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-4deg);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) rotate(3deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(5deg);
+  }
+}
+
+@utility animate-hero-float {
+  animation: hero-float 7s ease-in-out infinite;
+}
+
+@utility animate-hero-glow {
+  animation: hero-glow 5s ease-in-out infinite;
+}
+
+@utility animate-bounce-slow {
+  animation: bounce-slow 5s ease-in-out infinite;
+}
+
+@utility animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-float,
+  .animate-hero-glow {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROFESSIONAL PRINT STYLESHEET — iCademia Result Sheet
+   Produces a clean A4 result sheet when window.print() is called.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+
+  /* ── Page setup ─────────────────────────────────────────────────────── */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  /* ── Force colour printing ──────────────────────────────────────────── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* ── Hide everything; only reveal the result sheet ──────────────────── */
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > * {
+    display: none !important;
+  }
+
+  /* The route wrapper that contains <SiteHeader>, <main>, <SiteFooter> */
+  body > div {
+    display: block !important;
+  }
+  body > div > * {
+    display: none !important;
+  }
+  /* The page wrapper inside <main> */
+  body > div > main {
+    display: block !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  body > div > main > div {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Hide the action bar, AI cards, email card — only the result sheet */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* ── Result sheet resets ─────────────────────────────────────────────── */
+  .result-sheet {
+    width: 100% !important;
+    border: 1.5pt solid #c7cde0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    page-break-inside: avoid;
+    font-family: "Figtree", "Segoe UI", Arial, sans-serif !important;
+    font-size: 9pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── School header (coloured banner) ─────────────────────────────────── */
+  .result-sheet > div:first-child {
+    border-radius: 0 !important;
+    padding: 14pt 16pt !important;
+    page-break-inside: avoid;
+  }
+
+  /* ── Info cells / metric cells ───────────────────────────────────────── */
+  .result-sheet .grid.gap-px {
+    gap: 0 !important;
+    border-top: 0.5pt solid #c7cde0 !important;
+    border-bottom: 0.5pt solid #c7cde0 !important;
+  }
+
+  /* ── Table ───────────────────────────────────────────────────────────── */
+  .result-sheet table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8.5pt !important;
+    page-break-inside: avoid;
+  }
+
+  .result-sheet thead tr {
+    background-color: #eef1f8 !important;
+  }
+
+  .result-sheet th,
+  .result-sheet td {
+    padding: 5pt 7pt !important;
+    border-bottom: 0.5pt solid #d9dce6 !important;
+  }
+
+  .result-sheet tbody tr:nth-child(even) {
+    background-color: #f8f9fc !important;
+  }
+
+  /* Total / average row */
+  .result-sheet tbody tr:last-child {
+    background-color: #eef1f8 !important;
+    border-top: 1pt solid #b0b8d8 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Grade badges */
+  .result-sheet span[class*="rounded-lg"],
+  .result-sheet span[class*="rounded-md"] {
+    border-radius: 3pt !important;
+    padding: 1pt 3pt !important;
+    font-size: 7.5pt !important;
+    font-weight: 800 !important;
+  }
+
+  /* Score progress bars */
+  .result-sheet .h-1\.5,
+  .result-sheet .h-2 {
+    height: 4pt !important;
+    border-radius: 2pt !important;
+  }
+
+  /* ── Performance metrics strip ───────────────────────────────────────── */
+  .result-sheet .grid.grid-cols-2,
+  .result-sheet .sm\:grid-cols-4 {
+    page-break-inside: avoid;
+  }
+
+  /* ── Affective / psychomotor ─────────────────────────────────────────── */
+  .result-sheet .grid.gap-6 {
+    page-break-inside: avoid;
+  }
+
+  /* ── Remarks block ───────────────────────────────────────────────────── */
+  .result-sheet .italic {
+    font-style: italic !important;
+  }
+
+  /* ── Grade key footer ────────────────────────────────────────────────── */
+  .result-sheet > div:last-of-type {
+    border-top: 0.5pt solid #c7cde0 !important;
+    background-color: #f8f9fc !important;
+    font-size: 7.5pt !important;
+    page-break-inside: avoid;
+  }
+
+  /* ── Signature strip ─────────────────────────────────────────────────── */
+  .result-sheet-signatures {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 12pt !important;
+    padding-top: 6pt !important;
+    border-top: 0.5pt solid #c7cde0 !important;
+    font-size: 7.5pt !important;
+    color: #5a617a !important;
+  }
+
+  /* ── Decorative watermark ────────────────────────────────────────────── */
+  .result-sheet::after {
+    content: "iCademia — Official Result" !important;
+    position: fixed !important;
+    bottom: 6mm !important;
+    right: 8mm !important;
+    font-size: 7pt !important;
+    color: #b0b8d8 !important;
+    letter-spacing: 0.08em !important;
+    font-family: "Figtree", sans-serif !important;
+  }
+
+  /* ── Utility overrides ───────────────────────────────────────────────── */
+  .result-sheet .shadow-md,
+  .result-sheet .shadow-sm,
+  .result-sheet .shadow-elegant,
+  .result-sheet .shadow-card {
+    box-shadow: none !important;
+  }
+
+  .result-sheet .rounded-2xl,
+  .result-sheet .rounded-xl,
+  .result-sheet .rounded-lg {
+    border-radius: 0 !important;
+  }
+
+  .result-sheet img {
+    max-height: 44pt !important;
+    max-width: 44pt !important;
+  }
+}
+
