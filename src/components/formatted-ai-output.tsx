@@ -3,7 +3,7 @@ import React from "react";
 export function FormattedAiOutput({ text }: { text: string }) {
   if (!text) return null;
 
-  const normalizedText = text.replace(/\r\n/g, "\n");
+  const normalizedText = text.replace(/\r\n/g, "\n").replace(/\\([*_])/g, "$1");
   const lines = normalizedText.split("\n");
 
   const elements: React.ReactNode[] = [];
@@ -169,6 +169,21 @@ export function FormattedAiOutput({ text }: { text: string }) {
           { key: i, className: headerClasses },
           renderInline(content)
         )
+      );
+      continue;
+    }
+
+    // AI workflows use stable, plain-text section labels. Present them as real
+    // headings even when the model omits Markdown hashes.
+    if (/^[A-Z][A-Z &/()-]{2,}$/.test(trimmedLine)) {
+      flushList(i);
+      elements.push(
+        <h3
+          key={i}
+          className="mt-6 border-b border-border pb-2 font-display text-base font-semibold text-foreground first:mt-0"
+        >
+          {trimmedLine}
+        </h3>,
       );
       continue;
     }

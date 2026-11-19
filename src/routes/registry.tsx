@@ -25,12 +25,17 @@ import { Label } from "@/components/ui/label";
 import { lookupPublicSchoolRegistryDb } from "@/lib/api/db.functions";
 import { toast } from "sonner";
 import { getSchoolCode } from "@/lib/utils";
+import { SiteHeader } from "@/components/site-header";
 
 export const Route = createFileRoute("/registry")({
   head: () => ({
     meta: [
-      { title: "Public School Code & Registry Lookup — iCademia WHOIS" },
-      { name: "description", content: "Verify official school credentials, leadership, campus capacity, contact details and result registers by school code." },
+      { title: "School Registry ID Lookup — iCademia" },
+      {
+        name: "description",
+        content:
+          "Verify official school credentials, leadership, campus capacity, contact details and result registers by School Registry ID.",
+      },
     ],
   }),
   component: SchoolRegistryPage,
@@ -84,14 +89,12 @@ type RegistryData =
       }>;
     };
 
-const SAMPLE_CODES = ["ICA-SCH-IMO-OWE", "ICA-SCH-LAG-IKJ", "ICA-SCH-ENG-ENU"];
-
 function SchoolRegistryPage() {
   const navigate = useNavigate();
   const searchParams: { code?: string } = useSearch({ from: "/registry" });
 
   const activeSchoolCode = getSchoolCode();
-  const initialQuery = searchParams.code || activeSchoolCode || "ICA-SCH-IMO-OWE";
+  const initialQuery = searchParams.code || activeSchoolCode || "";
 
   const [inputCode, setInputCode] = useState(initialQuery);
   const [searching, setSearching] = useState(false);
@@ -110,7 +113,7 @@ function SchoolRegistryPage() {
       }
     } catch (err) {
       toast.error("Registry lookup failed", {
-        description: err instanceof Error ? err.message : "Please check the school code.",
+        description: err instanceof Error ? err.message : "Please check the School Registry ID.",
       });
       setData(null);
     } finally {
@@ -122,7 +125,7 @@ function SchoolRegistryPage() {
     if (initialQuery) {
       void performLookup(initialQuery);
     }
-  }, [searchParams.code]);
+  }, [initialQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,78 +163,55 @@ function SchoolRegistryPage() {
         }
       `}</style>
 
-      {/* Top Header — Hidden on Print */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur px-4 sm:px-8 py-3 flex items-center justify-between print:hidden">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/icademia-logo.png" alt="iCademia" className="h-7 w-7 object-contain" />
-          <span className="font-display font-bold text-lg tracking-tight">iCademia Registry</span>
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <Link to="/check-result">
-            <Button variant="outline" size="sm" className="text-xs gap-1.5 hidden sm:inline-flex">
-              <FileSpreadsheet className="h-3.5 w-3.5 text-primary" /> Check Result Sheet
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button size="sm" className="gradient-primary text-primary-foreground text-xs shadow-elegant">
-              Portal Sign In
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <div className="print:hidden">
+        <SiteHeader />
+      </div>
 
       {/* Main Hero & Search Container */}
       <div className="flex-1 space-y-8 p-4 sm:p-8 lg:p-12 max-w-6xl mx-auto w-full print:p-0 print:m-0 print:max-w-none">
         <header className="text-center space-y-3 print:hidden">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <ShieldCheck className="h-3.5 w-3.5" /> Official School Code & WHOIS Registry
+            <ShieldCheck className="h-3.5 w-3.5" /> Official School Registry
           </div>
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            School Registry & Ownership Lookup
+            School Identity & Registry Lookup
           </h1>
           <p className="max-w-2xl mx-auto text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Verify official educational credentials, leadership, campus student capacity, location, contact details, and result register authenticity using school code or school name.
+            Verify official educational credentials, leadership, campus student capacity, location,
+            contact details and result register authenticity using a unique School Registry ID or
+            school name.
           </p>
         </header>
 
         {/* WHOIS Search Bar — Hidden on Print */}
         <Card className="border-border p-4 sm:p-6 shadow-card bg-card max-w-3xl mx-auto print:hidden">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-stretch gap-2.5">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex flex-col sm:flex-row items-stretch gap-2.5"
+          >
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value)}
-                placeholder="Search by School Code, Name, or City (e.g. ICA-SCH-IMO-OWE)"
+                placeholder="Registry ID, school name or city"
                 className="pl-10 uppercase text-sm h-11 bg-background"
                 required
               />
             </div>
-            <Button type="submit" disabled={searching} className="gradient-primary text-primary-foreground h-11 px-6 text-sm font-semibold shadow-elegant gap-2">
-              {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            <Button
+              type="submit"
+              disabled={searching}
+              className="gradient-primary text-primary-foreground h-11 px-6 text-sm font-semibold shadow-elegant gap-2"
+            >
+              {searching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
               Lookup Registry
             </Button>
           </form>
-
-          {/* Quick Demo Chips */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-border/60">
-            <span className="text-[11px] text-muted-foreground font-semibold">Try sample searches:</span>
-            {SAMPLE_CODES.map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => {
-                  setInputCode(code);
-                  navigate({ to: "/registry", search: { code } });
-                  void performLookup(code);
-                }}
-                className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary text-[11px] font-mono transition border border-border"
-              >
-                {code}
-              </button>
-            ))}
-          </div>
         </Card>
 
         {/* REGISTRY REPORT RESULT */}
@@ -239,17 +219,33 @@ function SchoolRegistryPage() {
           <div className="grid min-h-[300px] place-items-center print:hidden">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium text-muted-foreground">Searching official school registry for <strong className="font-mono text-foreground">{inputCode}</strong>…</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Searching official school registry for{" "}
+                <strong className="font-mono text-foreground">{inputCode}</strong>…
+              </p>
             </div>
           </div>
-        ) : !data ? (
+        ) : !data && searchedCode ? (
           <Card className="border-border p-8 text-center space-y-3 max-w-xl mx-auto print:hidden">
             <div className="grid h-12 w-12 place-items-center rounded-full bg-muted mx-auto text-muted-foreground">
               <Building2 className="h-6 w-6 opacity-60" />
             </div>
-            <p className="font-semibold text-base">No Registry Entry Found</p>
+            <p className="font-semibold text-base">No verified school found</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              No verified educational institution was found matching <strong className="font-mono text-foreground">{searchedCode || inputCode}</strong>. Please verify the school code or name.
+              We could not find a verified institution matching{" "}
+              <strong className="font-mono text-foreground">{searchedCode}</strong>. Check the
+              spelling or try the institution's School Registry ID.
+            </p>
+          </Card>
+        ) : !data ? (
+          <Card className="border-border p-8 text-center space-y-3 max-w-xl mx-auto print:hidden">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10 mx-auto text-primary">
+              <Search className="h-5 w-5" />
+            </div>
+            <p className="font-semibold text-base">Search the verified school registry</p>
+            <p className="mx-auto max-w-md text-xs leading-relaxed text-muted-foreground">
+              Enter a School Registry ID, school name or city. A city may return several schools;
+              the Registry ID identifies exactly one institution.
             </p>
           </Card>
         ) : data.multipleMatches ? (
@@ -257,18 +253,30 @@ function SchoolRegistryPage() {
           <div className="space-y-4 print:hidden">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-bold text-lg text-foreground">Matching Schools Found ({data.matches.length})</h2>
-                <p className="text-xs text-muted-foreground">Multiple schools matched your search. Select the specific school to view its full registry certificate.</p>
+                <h2 className="font-bold text-lg text-foreground">
+                  Matching Schools Found ({data.matches.length})
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Multiple schools matched your search. Select the specific school to view its full
+                  registry certificate.
+                </p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data.matches.map((item) => (
-                <Card key={item.id} className="border-border p-5 shadow-card hover:border-primary/50 transition-all flex flex-col justify-between space-y-4">
+                <Card
+                  key={item.id}
+                  className="border-border p-5 shadow-card hover:border-primary/50 transition-all flex flex-col justify-between space-y-4"
+                >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       {item.logoUrl ? (
-                        <img src={item.logoUrl} alt={item.name} className="h-12 w-12 object-contain rounded-lg p-0.5 bg-white border shrink-0" />
+                        <img
+                          src={item.logoUrl}
+                          alt={item.name}
+                          className="h-12 w-12 object-contain rounded-lg p-0.5 bg-white border shrink-0"
+                        />
                       ) : (
                         <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary grid place-items-center font-bold text-sm shrink-0">
                           {item.name.slice(0, 2).toUpperCase()}
@@ -280,8 +288,12 @@ function SchoolRegistryPage() {
                     </div>
 
                     <div>
-                      <h3 className="font-bold text-base text-foreground leading-tight">{item.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.type} {item.city ? `· ${item.city}` : ""}</p>
+                      <h3 className="font-bold text-base text-foreground leading-tight">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.type} {item.city ? `· ${item.city}` : ""}
+                      </p>
                     </div>
 
                     {item.adminName && (
@@ -316,25 +328,43 @@ function SchoolRegistryPage() {
                 </span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">iCademia Verified Educational Institution</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                      iCademia Verified Educational Institution
+                    </span>
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   </div>
-                  <h2 className="font-display font-bold text-xl text-foreground mt-0.5">{data.school.name}</h2>
+                  <h2 className="font-display font-bold text-xl text-foreground mt-0.5">
+                    {data.school.name}
+                  </h2>
                   <p className="text-xs text-muted-foreground">
-                    Official Registry Code: <strong className="font-mono text-foreground">{data.school.schoolCode}</strong>
+                    School Registry ID:{" "}
+                    <strong className="font-mono text-foreground">{data.school.schoolCode}</strong>
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                <Button variant="outline" size="sm" onClick={handleShare} className="text-xs gap-1.5">
+              <div className="grid w-full gap-2 sm:flex sm:w-auto sm:items-center sm:self-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShare}
+                  className="w-full gap-1.5 text-xs sm:w-auto"
+                >
                   <Share2 className="h-3.5 w-3.5" /> Share Registry
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => window.print()} className="text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="w-full gap-1.5 border-primary/40 text-xs text-primary hover:bg-primary/10 sm:w-auto"
+                >
                   <Printer className="h-3.5 w-3.5" /> Print Accreditation Certificate
                 </Button>
-                <Link to={`/check-result`}>
-                  <Button size="sm" className="gradient-primary text-primary-foreground text-xs gap-1.5 shadow-elegant">
+                <Link to="/check-result" className="w-full sm:w-auto">
+                  <Button
+                    size="sm"
+                    className="w-full gap-1.5 gradient-primary text-xs text-primary-foreground shadow-elegant sm:w-auto"
+                  >
                     <FileSpreadsheet className="h-3.5 w-3.5" /> Verify Result Sheet
                   </Button>
                 </Link>
@@ -347,18 +377,30 @@ function SchoolRegistryPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b-2 border-border print:border-black">
                 <div className="flex items-center gap-4 text-center sm:text-left">
                   {data.school.logoUrl ? (
-                    <img src={data.school.logoUrl} alt={data.school.name} className="h-20 w-20 object-contain rounded-xl p-1 bg-white border border-border shadow-sm print:border-black" />
+                    <img
+                      src={data.school.logoUrl}
+                      alt={data.school.name}
+                      className="h-20 w-20 object-contain rounded-xl p-1 bg-white border border-border shadow-sm print:border-black"
+                    />
                   ) : (
                     <div className="h-20 w-20 rounded-xl bg-primary/10 text-primary grid place-items-center text-2xl font-bold font-display border print:border-black">
                       {data.school.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 print:text-black">Official Educational Accreditation Certificate</span>
-                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground print:text-black mt-0.5">{data.school.name}</h1>
-                    {data.school.motto && <p className="text-xs italic text-muted-foreground print:text-black/80 mt-0.5">"{data.school.motto}"</p>}
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 print:text-black">
+                      Official Educational Accreditation Certificate
+                    </span>
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground print:text-black mt-0.5">
+                      {data.school.name}
+                    </h1>
+                    {data.school.motto && (
+                      <p className="text-xs italic text-muted-foreground print:text-black/80 mt-0.5">
+                        "{data.school.motto}"
+                      </p>
+                    )}
                     <p className="text-xs font-mono font-semibold text-primary print:text-black mt-1">
-                      REGISTRY CODE: {data.school.schoolCode} · {data.school.type}
+                      SCHOOL REGISTRY ID: {data.school.schoolCode} · {data.school.type}
                     </p>
                   </div>
                 </div>
@@ -377,41 +419,69 @@ function SchoolRegistryPage() {
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 pt-6">
                 {/* 1. Leadership & Ownership */}
                 <div className="space-y-2 p-4 rounded-xl bg-muted/20 border border-border print:border-black print:bg-white">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">Principal / Head Administrator</Label>
-                  <p className="font-bold text-base text-foreground print:text-black">{data.school.adminName || "Registered Head Administrator"}</p>
-                  <p className="text-xs text-muted-foreground print:text-black">{data.school.headTitle || "Principal / Head Teacher"}</p>
-                  <p className="text-[11px] text-emerald-600 font-semibold print:text-black mt-1">✓ Identity & Credentials Verified</p>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">
+                    Principal / Head Administrator
+                  </Label>
+                  <p className="font-bold text-base text-foreground print:text-black">
+                    {data.school.adminName || "Registered Head Administrator"}
+                  </p>
+                  <p className="text-xs text-muted-foreground print:text-black">
+                    {data.school.headTitle || "Principal / Head Teacher"}
+                  </p>
+                  <p className="text-[11px] text-emerald-600 font-semibold print:text-black mt-1">
+                    ✓ Identity & Credentials Verified
+                  </p>
                 </div>
 
                 {/* 2. Campus & Contact */}
                 <div className="space-y-2 p-4 rounded-xl bg-muted/20 border border-border print:border-black print:bg-white">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">Campus Address & Contact</Label>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">
+                    Campus Address & Contact
+                  </Label>
                   <p className="text-xs font-medium text-foreground print:text-black">
-                    {data.school.address ? `${data.school.address}, ${data.school.city}` : data.school.city || "Nigeria"}
+                    {data.school.address
+                      ? `${data.school.address}, ${data.school.city}`
+                      : data.school.city || "Nigeria"}
                   </p>
-                  <p className="text-xs text-muted-foreground print:text-black">{data.school.contactEmail || data.school.adminEmail}</p>
-                  <p className="text-xs text-muted-foreground print:text-black">{data.school.contactPhone || data.school.adminPhone}</p>
+                  <p className="text-xs text-muted-foreground print:text-black">
+                    {data.school.contactEmail || data.school.adminEmail}
+                  </p>
+                  <p className="text-xs text-muted-foreground print:text-black">
+                    {data.school.contactPhone || data.school.adminPhone}
+                  </p>
                 </div>
 
                 {/* 3. Academic Metrics */}
                 <div className="space-y-2 p-4 rounded-xl bg-muted/20 border border-border print:border-black print:bg-white">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">Roster & Capacity Overview</Label>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground print:text-black font-bold">
+                    Roster & Capacity Overview
+                  </Label>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <p className="text-muted-foreground print:text-black">Enrolled Students</p>
-                      <p className="font-bold text-sm text-foreground print:text-black">{data.stats.enrolledStudents}</p>
+                      <p className="font-bold text-sm text-foreground print:text-black">
+                        {data.stats.enrolledStudents}
+                      </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground print:text-black">Teaching Faculty</p>
-                      <p className="font-bold text-sm text-foreground print:text-black">{data.stats.registeredTeachers}</p>
+                      <p className="font-bold text-sm text-foreground print:text-black">
+                        {data.stats.registeredTeachers}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground print:text-black">Student-Teacher Ratio</p>
-                      <p className="font-bold text-sm text-primary print:text-black">{data.stats.studentTeacherRatio} : 1</p>
+                      <p className="text-muted-foreground print:text-black">
+                        Student-Teacher Ratio
+                      </p>
+                      <p className="font-bold text-sm text-primary print:text-black">
+                        {data.stats.studentTeacherRatio} : 1
+                      </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground print:text-black">Campus Utilization</p>
-                      <p className="font-bold text-sm text-emerald-600 print:text-black">{data.stats.utilizationPercentage}%</p>
+                      <p className="text-muted-foreground print:text-black">Campus Utilisation</p>
+                      <p className="font-bold text-sm text-emerald-600 print:text-black">
+                        {data.stats.utilizationPercentage}%
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -420,8 +490,13 @@ function SchoolRegistryPage() {
               {/* Progress Utilization Bar */}
               <div className="mt-6 p-4 rounded-xl bg-muted/20 border border-border print:border-black print:bg-white space-y-2">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-foreground print:text-black">Campus Student Capacity Utilization Rate</span>
-                  <span className="text-primary print:text-black">{data.stats.enrolledStudents} Enrolled / {data.stats.campusCapacity} Total Capacity ({data.stats.utilizationPercentage}%)</span>
+                  <span className="text-foreground print:text-black">
+                    Campus Student Capacity Utilisation Rate
+                  </span>
+                  <span className="text-primary print:text-black">
+                    {data.stats.enrolledStudents} Enrolled / {data.stats.campusCapacity} Total
+                    Capacity ({data.stats.utilizationPercentage}%)
+                  </span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-primary/10 p-0.5 print:border print:border-black">
                   <div
@@ -438,14 +513,27 @@ function SchoolRegistryPage() {
                     iC
                   </div>
                   <div>
-                    <p className="font-bold text-foreground print:text-black">iCademia Official Educational Registry</p>
-                    <p className="text-[10px] text-muted-foreground print:text-black">Authentic digital grade registers and school code WHOIS service.</p>
+                    <p className="font-bold text-foreground print:text-black">
+                      iCademia Official Educational Registry
+                    </p>
+                    <p className="text-[10px] text-muted-foreground print:text-black">
+                      Authentic digital grade registers and institution registry verification.
+                    </p>
                   </div>
                 </div>
 
                 <div className="text-center sm:text-right text-[11px] text-muted-foreground print:text-black">
-                  <p>Verified Timestamp: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
-                  <p className="font-mono text-[10px]">VERIFICATION CODE: {data.school.schoolCode}-REG-OK</p>
+                  <p>
+                    Verified Timestamp:{" "}
+                    {new Date().toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <p className="font-mono text-[10px]">
+                    VERIFICATION CODE: {data.school.schoolCode}-REG-OK
+                  </p>
                 </div>
               </div>
             </div>
@@ -457,9 +545,12 @@ function SchoolRegistryPage() {
                   <Award className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="font-bold text-base text-foreground">Verified Result Verification Services</h3>
+                  <h3 className="font-bold text-base text-foreground">
+                    Verified Result Verification Services
+                  </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                    Students, parents, and secondary education boards can verify official term result sheets issued by {data.school.name} using scratch card PINs.
+                    Students, parents, and secondary education boards can verify official term
+                    result sheets issued by {data.school.name} using scratch card PINs.
                   </p>
                 </div>
               </div>
@@ -470,7 +561,7 @@ function SchoolRegistryPage() {
                   <span>Tamper-proof digital grade registers enabled</span>
                 </div>
 
-                <Link to={`/check-result`}>
+                <Link to="/check-result" className="w-full sm:w-auto">
                   <Button className="gradient-primary text-primary-foreground shadow-elegant gap-2 w-full sm:w-auto text-xs">
                     Check Student Result Sheet <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
@@ -483,7 +574,7 @@ function SchoolRegistryPage() {
 
       {/* Footer — Hidden on Print */}
       <footer className="border-t border-border bg-background py-6 text-center text-xs text-muted-foreground mt-12 print:hidden">
-        <p>© 2026 iCademia Educational Registry · Public School Credentials & WHOIS Service</p>
+        <p>© 2026 iCademia Educational Registry · Public Institution Verification</p>
       </footer>
     </div>
   );

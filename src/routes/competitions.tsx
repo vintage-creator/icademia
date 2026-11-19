@@ -98,13 +98,13 @@ function CompetitionsPage() {
                     organiser, eligibility, dates, participation requirements and official
                     registration channel have been verified.
                   </p>
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Button asChild>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <Button asChild className="w-full sm:w-auto">
                       <Link to="/register-school">
                         <BellRing className="mr-2 h-4 w-4" /> Register for school alerts
                       </Link>
                     </Button>
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
                       <a href="mailto:hello@icademia.app?subject=Submit%20a%20student%20competition">
                         Submit an opportunity
                       </a>

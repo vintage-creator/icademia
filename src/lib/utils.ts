@@ -20,10 +20,72 @@ export function getSchoolCode(): string {
   return "";
 }
 
+export function getAdminToken(): string {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("icademia_admin_token") || "";
+  }
+  return "";
+}
+
 export function setSchoolCode(code: string) {
   if (typeof window !== "undefined") {
     localStorage.setItem("icademia_school_code", code);
   }
+}
+
+export const SESSION_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+
+const ADMIN_SESSION_EXPIRES_KEY = "icademia_admin_session_expires_at";
+const TEACHER_SESSION_EXPIRES_KEY = "teacher_session_expires_at";
+
+type SessionRole = "admin" | "teacher";
+
+function getSessionExpiryKey(role: SessionRole) {
+  return role === "admin" ? ADMIN_SESSION_EXPIRES_KEY : TEACHER_SESSION_EXPIRES_KEY;
+}
+
+export function touchLocalSession(role: SessionRole) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(
+    getSessionExpiryKey(role),
+    String(Date.now() + SESSION_IDLE_TIMEOUT_MS),
+  );
+}
+
+export function clearAdminSession() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("icademia_admin_token");
+  localStorage.removeItem("icademia_admin_session_expires_at");
+  if (!localStorage.getItem("teacher_token")) {
+    localStorage.removeItem("icademia_school_code");
+  }
+}
+
+export function clearTeacherSession() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("teacher_token");
+  localStorage.removeItem("teacher_profile");
+  localStorage.removeItem("teacher_session_expires_at");
+}
+
+export function hasValidLocalSession(role: SessionRole) {
+  if (typeof window === "undefined") return false;
+
+  const tokenKey = role === "admin" ? "icademia_admin_token" : "teacher_token";
+  const token = localStorage.getItem(tokenKey);
+  if (!token) return false;
+
+  const expiresAt = Number(localStorage.getItem(getSessionExpiryKey(role)) || 0);
+  if (!expiresAt || Date.now() >= expiresAt) {
+    if (role === "admin") {
+      clearAdminSession();
+    } else {
+      clearTeacherSession();
+    }
+    return false;
+  }
+
+  return true;
 }
 
 export function getCurrentAcademicSession(): string {

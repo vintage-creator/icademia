@@ -14,7 +14,6 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
-  const [schoolCode, setSchoolCode] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -24,7 +23,7 @@ function ForgotPasswordPage() {
     setLoading(true);
     try {
       await requestSchoolPasswordResetDb({
-        data: { schoolCode: schoolCode.trim().toUpperCase(), email: email.trim() },
+        data: { email: email.trim() },
       });
       setSent(true);
     } finally {
@@ -60,20 +59,9 @@ function ForgotPasswordPage() {
             <Mail className="h-7 w-7 text-primary" />
             <h1 className="mt-5 font-display text-2xl font-semibold">Reset your password</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Enter the school code and administrator email used during onboarding.
+              Enter the administrator email used during onboarding.
             </p>
             <form onSubmit={submit} className="mt-7 space-y-4">
-              <div>
-                <Label htmlFor="reset-school-code">School code</Label>
-                <Input
-                  id="reset-school-code"
-                  value={schoolCode}
-                  onChange={(event) => setSchoolCode(event.target.value)}
-                  placeholder="ICA-SCH-XXXXXXX"
-                  className="mt-2 font-mono uppercase"
-                  required
-                />
-              </div>
               <div>
                 <Label htmlFor="reset-email">Administrator email</Label>
                 <Input

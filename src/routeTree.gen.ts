@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as CheckResultRouteImport } from './routes/check-result'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ConferencesRouteImport } from './routes/conferences'
@@ -23,6 +22,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterSchoolRouteImport } from './routes/register-school'
 import { Route as RegistryRouteImport } from './routes/registry'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SetupAccountRouteImport } from './routes/setup-account'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as TeacherLoginRouteImport } from './routes/teacher-login'
@@ -32,6 +32,7 @@ import { Route as WallOfFameRouteImport } from './routes/wall-of-fame'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAiRouteImport } from './routes/dashboard.ai'
 import { Route as DashboardClassesRouteImport } from './routes/dashboard.classes'
+import { Route as DashboardCommunicationRouteImport } from './routes/dashboard.communication'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardPinsRouteImport } from './routes/dashboard.pins'
 import { Route as DashboardRecordsRouteImport } from './routes/dashboard.records'
@@ -44,20 +45,15 @@ import { Route as DashboardSupportRouteImport } from './routes/dashboard.support
 import { Route as DashboardTeachersRouteImport } from './routes/dashboard.teachers'
 import { Route as DashboardTimetableRouteImport } from './routes/dashboard.timetable'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
+import { Route as TeacherAssignmentsRouteImport } from './routes/teacher.assignments'
 import { Route as TeacherClassesRouteImport } from './routes/teacher.classes'
 import { Route as TeacherProfileRouteImport } from './routes/teacher.profile'
 import { Route as TeacherResultsRouteImport } from './routes/teacher.results'
-import { Route as TeacherTimetableRouteImport } from './routes/teacher.timetable'
 import { Route as WidgetResultCheckerRouteImport } from './routes/widget.result-checker'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckResultRoute = CheckResultRouteImport.update({
@@ -120,6 +116,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetupAccountRoute = SetupAccountRouteImport.update({
+  id: '/setup-account',
+  path: '/setup-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -163,6 +164,11 @@ const DashboardAiRoute = DashboardAiRouteImport.update({
 const DashboardClassesRoute = DashboardClassesRouteImport.update({
   id: '/classes',
   path: '/classes',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCommunicationRoute = DashboardCommunicationRouteImport.update({
+  id: '/communication',
+  path: '/communication',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
@@ -225,6 +231,11 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherAssignmentsRoute = TeacherAssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherClassesRoute = TeacherClassesRouteImport.update({
   id: '/classes',
   path: '/classes',
@@ -240,11 +251,6 @@ const TeacherResultsRoute = TeacherResultsRouteImport.update({
   path: '/results',
   getParentRoute: () => TeacherRoute,
 } as any)
-const TeacherTimetableRoute = TeacherTimetableRouteImport.update({
-  id: '/timetable',
-  path: '/timetable',
-  getParentRoute: () => TeacherRoute,
-} as any)
 const WidgetResultCheckerRoute = WidgetResultCheckerRouteImport.update({
   id: '/widget/result-checker',
   path: '/widget/result-checker',
@@ -253,7 +259,6 @@ const WidgetResultCheckerRoute = WidgetResultCheckerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
   '/conferences': typeof ConferencesRoute
@@ -266,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/register-school': typeof RegisterSchoolRoute
   '/registry': typeof RegistryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-account': typeof SetupAccountRoute
   '/super-admin': typeof SuperAdminRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher-login': typeof TeacherLoginRoute
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/classes': typeof DashboardClassesRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/records': typeof DashboardRecordsRoute
@@ -285,17 +292,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/support': typeof DashboardSupportRoute
   '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard/timetable': typeof DashboardTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/classes': typeof TeacherClassesRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/results': typeof TeacherResultsRoute
-  '/teacher/timetable': typeof TeacherTimetableRoute
   '/widget/result-checker': typeof WidgetResultCheckerRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/teacher/': typeof TeacherIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
   '/conferences': typeof ConferencesRoute
@@ -307,6 +313,7 @@ export interface FileRoutesByTo {
   '/register-school': typeof RegisterSchoolRoute
   '/registry': typeof RegistryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-account': typeof SetupAccountRoute
   '/super-admin': typeof SuperAdminRoute
   '/teacher-login': typeof TeacherLoginRoute
   '/terms': typeof TermsRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/classes': typeof DashboardClassesRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/records': typeof DashboardRecordsRoute
@@ -325,10 +333,10 @@ export interface FileRoutesByTo {
   '/dashboard/support': typeof DashboardSupportRoute
   '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard/timetable': typeof DashboardTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/classes': typeof TeacherClassesRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/results': typeof TeacherResultsRoute
-  '/teacher/timetable': typeof TeacherTimetableRoute
   '/widget/result-checker': typeof WidgetResultCheckerRoute
   '/dashboard': typeof DashboardIndexRoute
   '/teacher': typeof TeacherIndexRoute
@@ -336,7 +344,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/check-result': typeof CheckResultRoute
   '/competitions': typeof CompetitionsRoute
   '/conferences': typeof ConferencesRoute
@@ -349,6 +356,7 @@ export interface FileRoutesById {
   '/register-school': typeof RegisterSchoolRoute
   '/registry': typeof RegistryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-account': typeof SetupAccountRoute
   '/super-admin': typeof SuperAdminRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher-login': typeof TeacherLoginRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/wall-of-fame': typeof WallOfFameRoute
   '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/classes': typeof DashboardClassesRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/pins': typeof DashboardPinsRoute
   '/dashboard/records': typeof DashboardRecordsRoute
@@ -368,10 +377,10 @@ export interface FileRoutesById {
   '/dashboard/support': typeof DashboardSupportRoute
   '/dashboard/teachers': typeof DashboardTeachersRoute
   '/dashboard/timetable': typeof DashboardTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/classes': typeof TeacherClassesRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/results': typeof TeacherResultsRoute
-  '/teacher/timetable': typeof TeacherTimetableRoute
   '/widget/result-checker': typeof WidgetResultCheckerRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -380,7 +389,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/check-result'
     | '/competitions'
     | '/conferences'
@@ -393,6 +401,7 @@ export interface FileRouteTypes {
     | '/register-school'
     | '/registry'
     | '/reset-password'
+    | '/setup-account'
     | '/super-admin'
     | '/teacher'
     | '/teacher-login'
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/wall-of-fame'
     | '/dashboard/ai'
     | '/dashboard/classes'
+    | '/dashboard/communication'
     | '/dashboard/notifications'
     | '/dashboard/pins'
     | '/dashboard/records'
@@ -412,17 +422,16 @@ export interface FileRouteTypes {
     | '/dashboard/support'
     | '/dashboard/teachers'
     | '/dashboard/timetable'
+    | '/teacher/assignments'
     | '/teacher/classes'
     | '/teacher/profile'
     | '/teacher/results'
-    | '/teacher/timetable'
     | '/widget/result-checker'
     | '/dashboard/'
     | '/teacher/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
     | '/check-result'
     | '/competitions'
     | '/conferences'
@@ -434,6 +443,7 @@ export interface FileRouteTypes {
     | '/register-school'
     | '/registry'
     | '/reset-password'
+    | '/setup-account'
     | '/super-admin'
     | '/teacher-login'
     | '/terms'
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/wall-of-fame'
     | '/dashboard/ai'
     | '/dashboard/classes'
+    | '/dashboard/communication'
     | '/dashboard/notifications'
     | '/dashboard/pins'
     | '/dashboard/records'
@@ -452,17 +463,16 @@ export interface FileRouteTypes {
     | '/dashboard/support'
     | '/dashboard/teachers'
     | '/dashboard/timetable'
+    | '/teacher/assignments'
     | '/teacher/classes'
     | '/teacher/profile'
     | '/teacher/results'
-    | '/teacher/timetable'
     | '/widget/result-checker'
     | '/dashboard'
     | '/teacher'
   id:
     | '__root__'
     | '/'
-    | '/about'
     | '/check-result'
     | '/competitions'
     | '/conferences'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/register-school'
     | '/registry'
     | '/reset-password'
+    | '/setup-account'
     | '/super-admin'
     | '/teacher'
     | '/teacher-login'
@@ -483,6 +494,7 @@ export interface FileRouteTypes {
     | '/wall-of-fame'
     | '/dashboard/ai'
     | '/dashboard/classes'
+    | '/dashboard/communication'
     | '/dashboard/notifications'
     | '/dashboard/pins'
     | '/dashboard/records'
@@ -494,10 +506,10 @@ export interface FileRouteTypes {
     | '/dashboard/support'
     | '/dashboard/teachers'
     | '/dashboard/timetable'
+    | '/teacher/assignments'
     | '/teacher/classes'
     | '/teacher/profile'
     | '/teacher/results'
-    | '/teacher/timetable'
     | '/widget/result-checker'
     | '/dashboard/'
     | '/teacher/'
@@ -505,7 +517,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   CheckResultRoute: typeof CheckResultRoute
   CompetitionsRoute: typeof CompetitionsRoute
   ConferencesRoute: typeof ConferencesRoute
@@ -518,6 +529,7 @@ export interface RootRouteChildren {
   RegisterSchoolRoute: typeof RegisterSchoolRoute
   RegistryRoute: typeof RegistryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SetupAccountRoute: typeof SetupAccountRoute
   SuperAdminRoute: typeof SuperAdminRoute
   TeacherRoute: typeof TeacherRouteWithChildren
   TeacherLoginRoute: typeof TeacherLoginRoute
@@ -534,13 +546,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/check-result': {
@@ -627,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/setup-account': {
+      id: '/setup-account'
+      path: '/setup-account'
+      fullPath: '/setup-account'
+      preLoaderRoute: typeof SetupAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/super-admin': {
       id: '/super-admin'
       path: '/super-admin'
@@ -688,6 +700,13 @@ declare module '@tanstack/react-router' {
       path: '/classes'
       fullPath: '/dashboard/classes'
       preLoaderRoute: typeof DashboardClassesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/communication': {
+      id: '/dashboard/communication'
+      path: '/communication'
+      fullPath: '/dashboard/communication'
+      preLoaderRoute: typeof DashboardCommunicationRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/notifications': {
@@ -774,6 +793,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherIndexRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/assignments': {
+      id: '/teacher/assignments'
+      path: '/assignments'
+      fullPath: '/teacher/assignments'
+      preLoaderRoute: typeof TeacherAssignmentsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/classes': {
       id: '/teacher/classes'
       path: '/classes'
@@ -795,13 +821,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherResultsRouteImport
       parentRoute: typeof TeacherRoute
     }
-    '/teacher/timetable': {
-      id: '/teacher/timetable'
-      path: '/timetable'
-      fullPath: '/teacher/timetable'
-      preLoaderRoute: typeof TeacherTimetableRouteImport
-      parentRoute: typeof TeacherRoute
-    }
     '/widget/result-checker': {
       id: '/widget/result-checker'
       path: '/widget/result-checker'
@@ -815,6 +834,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardAiRoute: typeof DashboardAiRoute
   DashboardClassesRoute: typeof DashboardClassesRoute
+  DashboardCommunicationRoute: typeof DashboardCommunicationRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardPinsRoute: typeof DashboardPinsRoute
   DashboardRecordsRoute: typeof DashboardRecordsRoute
@@ -832,6 +852,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAiRoute: DashboardAiRoute,
   DashboardClassesRoute: DashboardClassesRoute,
+  DashboardCommunicationRoute: DashboardCommunicationRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardPinsRoute: DashboardPinsRoute,
   DashboardRecordsRoute: DashboardRecordsRoute,
@@ -851,18 +872,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 )
 
 interface TeacherRouteChildren {
+  TeacherAssignmentsRoute: typeof TeacherAssignmentsRoute
   TeacherClassesRoute: typeof TeacherClassesRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
   TeacherResultsRoute: typeof TeacherResultsRoute
-  TeacherTimetableRoute: typeof TeacherTimetableRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
 }
 
 const TeacherRouteChildren: TeacherRouteChildren = {
+  TeacherAssignmentsRoute: TeacherAssignmentsRoute,
   TeacherClassesRoute: TeacherClassesRoute,
   TeacherProfileRoute: TeacherProfileRoute,
   TeacherResultsRoute: TeacherResultsRoute,
-  TeacherTimetableRoute: TeacherTimetableRoute,
   TeacherIndexRoute: TeacherIndexRoute,
 }
 
@@ -871,7 +892,6 @@ const TeacherRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   CheckResultRoute: CheckResultRoute,
   CompetitionsRoute: CompetitionsRoute,
   ConferencesRoute: ConferencesRoute,
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterSchoolRoute: RegisterSchoolRoute,
   RegistryRoute: RegistryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SetupAccountRoute: SetupAccountRoute,
   SuperAdminRoute: SuperAdminRoute,
   TeacherRoute: TeacherRouteWithChildren,
   TeacherLoginRoute: TeacherLoginRoute,

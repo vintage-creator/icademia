@@ -1,11 +1,12 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { getSchoolCode } from "@/lib/utils";
+import { clearAdminSession, getSchoolCode, hasValidLocalSession, touchLocalSession } from "@/lib/utils";
 import { NotificationBell } from "@/components/notification-bell";
 import { MessagingPanel } from "@/components/messaging-panel";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { verifySchoolAdminSessionDb } from "@/lib/api/db.functions";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -13,16 +14,37 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const navigate = useNavigate();
-  const [authorised, setAuthorised] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const schoolCode = getSchoolCode();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Instant SWR Auth: Optimistically render layout if local credentials are present, then verify in background
+  const [authorised, setAuthorised] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(hasValidLocalSession("admin") && schoolCode && schoolCode.length >= 4);
+  });
 
   useEffect(() => {
-    if (schoolCode.length < 4) {
+    const token = localStorage.getItem("icademia_admin_token");
+    if (!token || !hasValidLocalSession("admin") || schoolCode.length < 4) {
+      clearAdminSession();
       void navigate({ to: "/login", replace: true });
       return;
     }
-    setAuthorised(true);
+    verifySchoolAdminSessionDb({ data: { token } })
+      .then((session) => {
+        if (!session || session.school_code !== schoolCode) {
+          clearAdminSession();
+          void navigate({ to: "/login", replace: true });
+          return;
+        }
+        touchLocalSession("admin");
+        window.dispatchEvent(new Event("icademia:session-updated"));
+        setAuthorised(true);
+      })
+      .catch(() => {
+        clearAdminSession();
+        void navigate({ to: "/login", replace: true });
+      });
   }, [navigate, schoolCode]);
 
   if (!authorised) {
@@ -51,7 +73,10 @@ function DashboardLayout() {
             </Button>
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="truncate">Portal · <strong className="font-mono text-foreground uppercase">{schoolCode}</strong></span>
+              <span className="truncate">
+                Portal ·{" "}
+                <strong className="font-mono text-foreground uppercase">{schoolCode}</strong>
+              </span>
             </div>
           </div>
 

@@ -39,7 +39,7 @@ function Terms() {
         ],
         [
           "7. Orders, payment and fulfilment",
-          "An order becomes paid only after server-side confirmation from the payment provider. Schools must verify quantity, contact and delivery information before payment. Bulk physical-card fulfilment is normally estimated at 5–12 working days after confirmed payment, but this is an estimate rather than a guaranteed delivery date. Fraud checks, address issues, provider outages and events outside reasonable control may cause delay.",
+          "To pay by transfer, schools must request the current account details on WhatsApp at 07065737817 and send their transfer receipt to the same number. An order is marked paid only after iCademia confirms receipt. Physical-card fulfilment is normally estimated at 5–12 working days after confirmation, but this is an estimate rather than a guaranteed delivery date. Fraud checks, address issues and events outside reasonable control may cause delay.",
         ],
         [
           "8. Pricing, refunds and replacements",
@@ -63,7 +63,7 @@ function Terms() {
         ],
         [
           "13. Third-party services and integrations",
-          "The service may rely on payment, hosting, storage, email, AI and school-website providers. Their availability and separate terms may affect a feature. Links to external competitions or organisers are provided for information; participation is governed by the organiser’s rules. iCademia does not endorse or guarantee an external opportunity merely by listing it.",
+          "The service may rely on hosting, storage, email, AI and school-website providers. Their availability and separate terms may affect a feature. Links to external competitions or organisers are provided for information; participation is governed by the organiser’s rules. iCademia does not endorse or guarantee an external opportunity merely by listing it.",
         ],
         [
           "14. Availability, maintenance and changes",
@@ -91,7 +91,7 @@ function Terms() {
         ],
         [
           "20. Contact",
-          "Questions, payment disputes or legal notices may be sent to hello@icademia.app or raised by calling 0706 573 7817 or 0813 804 5718. Include the school name and relevant order or support reference, but never send a password or complete access-card PIN.",
+          "Questions or legal notices may be sent to hello@icademia.app or raised by calling 0813 804 5718. For transfer account details, transfer receipts and payment disputes, message iCademia on WhatsApp at 07065737817. Include the school name and relevant order or support reference, but never send a password or complete access-card PIN.",
         ],
       ]}
     />

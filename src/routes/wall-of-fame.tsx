@@ -290,7 +290,9 @@ function WallOfFame() {
               </h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              {viewMode === "students" ? filtered.length : filteredClasses.length} {viewMode === "students" ? "crested" : "ranked"} {category !== "All" ? `in ${category}` : (viewMode === "students" ? "students" : "classes")}
+              {(viewMode === "students" ? filtered.length : filteredClasses.length) === 0
+                ? "Honours appear after verified session results are published."
+                : `${viewMode === "students" ? filtered.length : filteredClasses.length} ${viewMode === "students" ? "crested students" : "ranked classes"}${category !== "All" ? ` in ${category}` : ""}`}
             </p>
           </div>
           {loading ? (
@@ -298,7 +300,7 @@ function WallOfFame() {
           ) : viewMode === "students" ? (
             rest.length === 0 ? (
               <Card className="border-dashed p-10 text-center text-sm text-muted-foreground">
-                No crested students in this category yet.
+                The verified student honour roll will appear here after partner schools complete session publication.
               </Card>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -347,7 +349,7 @@ function WallOfFame() {
           ) : (
             restClasses.length === 0 ? (
               <Card className="border-dashed p-10 text-center text-sm text-muted-foreground">
-                No ranked classes in this category yet.
+                Verified class rankings will appear here after partner schools complete session publication.
               </Card>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -394,7 +396,7 @@ function WallOfFame() {
             <Button
               asChild
               size="lg"
-              className="mt-6 gradient-primary text-primary-foreground shadow-elegant"
+              className="mt-6 w-full gradient-primary text-primary-foreground shadow-elegant sm:w-auto"
             >
               <a href="/register-school">Become a partner school</a>
             </Button>

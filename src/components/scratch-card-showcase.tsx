@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarDays,
   KeyRound,
+  MapPin,
   RotateCcw,
   ScanLine,
   School,
@@ -54,7 +55,11 @@ export function ScratchCardShowcase() {
             ))}
           </div>
           <div className="mt-9 flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto">
-            <Button asChild size="lg" className="bg-[#d6a84b] text-[#07111f] hover:bg-[#e3bc66] w-full sm:w-auto justify-center">
+            <Button
+              asChild
+              size="lg"
+              className="bg-[#d6a84b] text-[#07111f] hover:bg-[#e3bc66] w-full sm:w-auto justify-center"
+            >
               <Link to="/register-school">
                 Order for your school <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -72,13 +77,13 @@ export function ScratchCardShowcase() {
         </div>
 
         <div
-          className="mx-auto w-full max-w-2xl [perspective:1600px]"
+          className="mx-auto w-full max-w-2xl py-2 [perspective:1600px] sm:py-0"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
           onBlurCapture={() => setPaused(false)}
         >
-          <div className="relative aspect-[1.68/1] w-full [transform:rotateX(-5deg)_rotateZ(-1deg)] [transform-style:preserve-3d]">
+          <div className="relative aspect-[1.68/1] w-full [transform-style:preserve-3d] sm:[transform:rotateX(-5deg)_rotateZ(-1deg)]">
             <div
               className="absolute inset-0 transition-transform duration-1000 ease-in-out [transform-style:preserve-3d]"
               style={{ transform: `rotateY(${backVisible ? 180 : 0}deg)` }}
@@ -97,15 +102,70 @@ export function ScratchCardShowcase() {
   );
 }
 
+export function AccessCardVisual() {
+  const [backVisible, setBackVisible] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setBackVisible((value) => !value), 4800);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#0d1f3c_0%,#07111f_45%,#101832_100%)] p-6 shadow-[0_8px_40px_rgba(7,17,31,0.45)] sm:p-8">
+      {/* Subtle gold + blue glows inside the card container */}
+      <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#d6a84b]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-sky-400/10 blur-3xl" />
+      {/* One access card · 365 days label */}
+      <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[#d6a84b]/80">
+        One access card · 365 days of access
+      </p>
+      <div className="mx-auto w-full max-w-2xl py-2 [perspective:1600px] sm:py-0">
+        <div className="relative aspect-[1.68/1] w-full [transform-style:preserve-3d] sm:[transform:rotateX(-3deg)]">
+          <div
+            className="absolute inset-0 transition-transform duration-700 ease-in-out [transform-style:preserve-3d]"
+            style={{ transform: `rotateY(${backVisible ? 180 : 0}deg)` }}
+          >
+            <CardEdges />
+            <CardFront />
+            <CardBack />
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-white/10 pt-4">
+        <div>
+          <p className="text-xs font-semibold text-white">
+            School-branded annual access card
+          </p>
+          <p className="mt-0.5 text-[10px] text-white/45">
+            Demo preview · rotates automatically
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setBackVisible((value) => !value)}
+          className="w-full shrink-0 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:w-auto"
+        >
+          <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+          Show {backVisible ? "front" : "back"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CardShell({ children, back = false }: { children: React.ReactNode; back?: boolean }) {
   return (
     <div
-      className="absolute inset-0 overflow-hidden rounded-[1.65rem] border border-white/20 bg-[linear-gradient(135deg,#172c56_0%,#0d1d3c_45%,#101b31_100%)] p-[5%] shadow-[0_35px_90px_rgba(0,0,0,.45)] [backface-visibility:hidden]"
+      className="absolute inset-0 overflow-hidden rounded-2xl border border-white/20 bg-[linear-gradient(135deg,#193560_0%,#10264a_28%,#0a1932_62%,#07111f_100%)] p-[3.5%] text-white shadow-[0_24px_55px_rgba(0,0,0,.34),inset_0_1px_0_rgba(255,255,255,.16)] [backface-visibility:hidden] sm:rounded-[1.65rem] sm:p-[5%] sm:shadow-[0_35px_90px_rgba(0,0,0,.45),inset_0_1px_0_rgba(255,255,255,.16)]"
       style={{ transform: back ? "rotateY(180deg) translateZ(5px)" : "translateZ(5px)" }}
     >
       <div className="absolute -right-[12%] -top-[30%] h-[85%] w-[58%] rounded-full border-[18px] border-[#d6a84b]/15" />
-      <div className="absolute -bottom-[45%] -left-[10%] h-[85%] w-[55%] rounded-full border-[1px] border-white/10" />
-      <div className="absolute inset-0 opacity-10 [background-image:repeating-linear-gradient(120deg,transparent_0,transparent_14px,#fff_15px,transparent_16px)]" />
+      <div className="absolute -bottom-[45%] -left-[10%] h-[85%] w-[55%] rounded-full border border-white/10" />
+      <div className="absolute inset-0 opacity-[0.07] [background-image:repeating-linear-gradient(120deg,transparent_0,transparent_14px,#fff_15px,transparent_16px)]" />
+      <div className="absolute inset-x-0 top-0 h-[44%] bg-gradient-to-b from-white/10 to-transparent" />
       <div className="relative h-full">{children}</div>
     </div>
   );
@@ -138,48 +198,53 @@ function CardFront() {
   return (
     <CardShell>
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             src="/icademia-logo-white.png"
             alt=""
-            className="h-9 w-9 object-contain sm:h-10 sm:w-10"
+            className="h-7 w-7 object-contain sm:h-10 sm:w-10"
           />
           <div>
-            <p className="font-display text-lg font-bold sm:text-2xl">iCademia</p>
-            <p className="text-[8px] uppercase tracking-[0.28em] text-white/55 sm:text-[10px]">
+            <p className="font-display text-base font-bold sm:text-2xl">iCademia</p>
+            <p className="text-[6px] uppercase tracking-[0.22em] text-white/55 sm:text-[10px] sm:tracking-[0.28em]">
               Student access card
             </p>
           </div>
         </div>
-        <span className="rounded-full border border-[#d6a84b]/30 bg-[#d6a84b]/10 px-3 py-1 text-[8px] font-semibold uppercase tracking-wider text-[#f5d996] sm:text-[10px]">
+        <span className="hidden rounded-full border border-[#d6a84b]/30 bg-[#d6a84b]/10 px-3 py-1 text-[8px] font-semibold uppercase tracking-wider text-[#f5d996] sm:inline-flex sm:text-[10px]">
           Annual identity
         </span>
       </div>
-      <div className="mt-[7%] flex items-center gap-[5%]">
+      <div className="mt-[4%] flex items-center gap-[4%] sm:mt-[7%] sm:gap-[5%]">
         <MetallicChip />
         <div>
           <div className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-white/10 text-[#f5d996] sm:h-9 sm:w-9">
+            <span className="hidden h-7 w-7 place-items-center rounded-md bg-white/10 text-[#f5d996] sm:grid sm:h-9 sm:w-9">
               <School className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </span>
             <div>
-              <p className="text-[7px] uppercase tracking-[0.2em] text-white/40 sm:text-[9px]">
+              <p className="text-[8px] uppercase tracking-[0.16em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
                 Issued by
               </p>
-              <p className="font-display text-sm font-semibold sm:text-lg">YOUR SCHOOL NAME</p>
+              <p className="font-display text-xs font-semibold sm:text-lg">Demo Heights Academy</p>
+              <p className="mt-0.5 flex items-center gap-1 text-[7px] text-white/50 sm:text-[9px]">
+                <MapPin className="h-2.5 w-2.5 text-[#f5d996]" />
+                Port Harcourt, Rivers State
+              </p>
             </div>
           </div>
-          <p className="mt-1.5 text-[7px] uppercase tracking-[0.2em] text-white/45 sm:text-[9px]">
-            Private access · assigned to one student
-          </p>
+          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[6px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:gap-x-3 sm:text-[9px] sm:tracking-[0.16em]">
+            <span>Ada Okafor</span>
+            <span>Student ID · ICA-DEMO-0042</span>
+          </div>
         </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between">
         <div>
-          <p className="text-[8px] uppercase tracking-[0.22em] text-white/40 sm:text-[10px]">
+          <p className="text-[6px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.22em]">
             Unlock 365 days of access
           </p>
-          <p className="mt-1 text-[10px] font-medium text-white/75 sm:text-sm">
+          <p className="mt-0.5 text-[8px] font-medium text-white/75 sm:mt-1 sm:text-sm">
             Results · Scripts · Guidance · Recognition
           </p>
         </div>
@@ -197,44 +262,51 @@ function CardFront() {
 function CardBack() {
   return (
     <CardShell back>
-      <div className="flex h-full gap-[5%]">
+      <div className="flex h-full gap-[5%] pt-[4%] sm:pt-0">
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center justify-between">
-            <p className="font-display text-sm font-semibold sm:text-lg">How to use your card</p>
-            <p className="font-mono text-[8px] text-white/45 sm:text-[10px]">SN ICA-26-04A91F7C</p>
+            <p className="font-display text-[11px] font-semibold sm:text-lg">
+              How to use your card
+            </p>
+            <p className="font-mono text-[7px] text-white/45 sm:text-[10px]">DEMO-26-0042</p>
           </div>
-          <ol className="mt-[4%] space-y-[2%] text-[8px] leading-relaxed text-white/72 sm:text-[11px]">
+          <ol className="mt-[2%] space-y-0.5 text-[7px] leading-[1.35] text-white/72 sm:mt-[4%] sm:space-y-[2%] sm:text-[11px] sm:leading-relaxed">
             <li>1. Log in through your school portal or visit www.icademia.app.</li>
             <li>2. Open Result Checker and enter your registration number.</li>
             <li>3. Scratch gently, enter the unique PIN and keep this card safe.</li>
           </ol>
-          <div className="relative mt-[4%] overflow-hidden rounded-lg border border-white/15 bg-black/20 px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3">
-            <p className="text-[7px] uppercase tracking-[0.22em] text-white/45 sm:text-[9px]">
+          <div className="relative mt-[10%] overflow-hidden rounded-lg border border-white/15 bg-black/20 px-2 py-1.5 shadow-inner sm:mt-[4%] sm:rounded-xl sm:px-4 sm:py-3">
+            <p className="text-[6px] uppercase tracking-[0.16em] text-white/45 sm:text-[9px] sm:tracking-[0.22em]">
               Unique access PIN
             </p>
-            <p className="mt-1 font-mono text-sm font-bold tracking-[0.13em] text-white sm:text-xl">
-              6F3A<span className="text-[#f5d996]">-</span>9C••
-              <span className="text-[#f5d996]">-</span>
-              ••••
+            <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] font-bold tracking-[0.06em] text-white sm:mt-1 sm:text-xl sm:tracking-[0.1em]">
+              4F2A<span className="text-[#f5d996]">-</span>7B19
+              <span className="text-[#f5d996]">-</span>X05C
+              <span className="text-[#f5d996]">-</span>8D3K
             </p>
-            <div className="absolute right-0 top-0 h-full w-[43%] -skew-x-12 bg-[linear-gradient(120deg,#8a8f98,#e7e9ed_45%,#777c86)] opacity-95" />
+            <div
+              aria-hidden="true"
+              className="absolute right-0 top-0 h-full w-[54%] border-l border-white/70 bg-[linear-gradient(115deg,#616872_0%,#f9fafb_25%,#9299a2_48%,#ffffff_69%,#656d77_100%)] shadow-[-8px_0_16px_rgba(7,17,31,.24)] [clip-path:polygon(8%_0,100%_0,100%_100%,5%_100%,0_84%,7%_68%,1%_50%,8%_31%,2%_14%)]"
+            />
             <p className="absolute right-3 top-1/2 -translate-y-1/2 rotate-[-3deg] text-[7px] font-bold uppercase tracking-wider text-slate-700 sm:text-[9px]">
               Scratch gently
             </p>
           </div>
-          <div className="mt-auto flex items-end justify-between text-[7px] text-white/48 sm:text-[9px]">
+          <div className="mt-auto flex items-end justify-between pt-1 text-[6px] text-white/48 sm:pt-0 sm:text-[9px]">
             <div>
               <p>Expires 365 days after first activation</p>
-              <p className="mt-1">Support: 07065737817 / 08138045718 · hello@icademia.app</p>
+              <p className="mt-1 hidden sm:block">
+                WhatsApp transfer support: 07065737817 · hello@icademia.app
+              </p>
             </div>
             <p className="font-medium text-white/65">www.icademia.app</p>
           </div>
         </div>
-        <div className="flex h-fit w-[21%] self-center flex-col items-center rounded-xl border border-white/15 bg-white/[0.04] p-1.5 text-white sm:p-2">
+        <div className="flex h-fit w-[18%] self-center flex-col items-center rounded-lg border border-white/15 bg-white/[0.04] p-1 text-white sm:w-[21%] sm:rounded-xl sm:p-2">
           <div className="w-[82%]">
             <QrMark />
           </div>
-          <p className="mt-1 text-center text-[6px] font-bold uppercase leading-tight sm:text-[8px]">
+          <p className="mt-1 text-center text-[5px] font-bold uppercase leading-tight sm:text-[8px]">
             Scan to check result
           </p>
         </div>
@@ -245,7 +317,7 @@ function CardBack() {
 
 function MetallicChip() {
   return (
-    <div className="grid h-12 w-16 grid-cols-3 overflow-hidden rounded-lg border border-amber-200/40 bg-[linear-gradient(135deg,#f5d87d,#a87824_55%,#efd98c)] p-1 shadow-inner sm:h-16 sm:w-20">
+    <div className="grid h-10 w-14 shrink-0 grid-cols-3 overflow-hidden rounded-md border border-amber-200/40 bg-[linear-gradient(135deg,#f5d87d,#a87824_55%,#efd98c)] p-1 shadow-inner sm:h-16 sm:w-20 sm:rounded-lg">
       {Array.from({ length: 9 }).map((_, index) => (
         <span key={index} className="border border-amber-900/35" />
       ))}

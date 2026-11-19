@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Loader2, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-import { setSchoolCode } from "@/lib/utils";
+import { setSchoolCode, touchLocalSession } from "@/lib/utils";
 import { authenticateSchoolAdminDb } from "@/lib/api/db.functions";
 import { toast } from "sonner";
 
@@ -21,6 +21,9 @@ function getSignInErrorMessage(error: unknown) {
   const trimmed = message.trim();
 
   if (!trimmed) return "Please check your details and try again.";
+  if (trimmed === "Invalid email or password.") {
+    return "Invalid email or password. If your school has not yet been registered on iCademia, please complete school onboarding.";
+  }
   if (
     trimmed.startsWith("<!doctype") ||
     trimmed.includes("This page didn't load") ||
@@ -39,7 +42,6 @@ function getSignInErrorMessage(error: unknown) {
 function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [schoolCode, setLocalSchoolCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -49,9 +51,15 @@ function LoginPage() {
     setLoading(true);
     try {
       const result = await authenticateSchoolAdminDb({
-        data: { schoolCode: schoolCode.trim().toUpperCase(), email, password },
+        data: { email, password },
       });
       setSchoolCode(result.schoolCode);
+      localStorage.setItem("icademia_admin_token", result.token);
+      touchLocalSession("admin");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("icademia:session-activity"));
+        window.dispatchEvent(new Event("icademia:session-updated"));
+      }
       await navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error("Sign in failed", {
@@ -99,103 +107,121 @@ function LoginPage() {
                 </span>
               ))}
             </div>
+            <div className="mt-8 pt-6 border-t border-white/10 flex items-center gap-4 text-xs text-white/60">
+              <Link to="/privacy" className="hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <span>·</span>
+              <Link to="/terms" className="hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+            </div>
           </div>
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} iCademia</p>
+          <p className="text-xs text-white/50">© {new Date().getFullYear()} iCademia Technologies</p>
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center p-6 sm:p-10">
-        <Link
-          to="/"
-          className="absolute left-6 top-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to home
-        </Link>
-        <Card className="w-full max-w-md border-white/80 bg-white p-7 shadow-[0_24px_70px_-28px_rgba(7,26,46,0.35)] sm:p-9">
-          <BrandLink compact className="mb-8 lg:hidden" />
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-            Sign in with the code issued to your school and your administrator credentials.
-          </p>
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="school-code">School Code</Label>
-              <Input
-                id="school-code"
-                type="text"
-                placeholder="ICA-SCH-XXXXX"
-                className="mt-2 font-mono uppercase"
-                value={schoolCode}
-                onChange={(e) => setLocalSchoolCode(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="admin@school.edu.ng"
-                className="mt-2"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  className="text-xs font-medium text-primary hover:underline"
-                  to="/forgot-password"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
+      <div className="relative flex flex-col justify-between min-h-screen p-6 sm:p-10">
+        <div className="flex flex-1 items-center justify-center my-auto w-full">
+          <Card className="w-full max-w-xl border-white/80 bg-white p-8 shadow-[0_24px_70px_-28px_rgba(7,26,46,0.35)] sm:p-10">
+            <BrandLink compact className="mb-6 lg:hidden" />
+            <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">Welcome back</h1>
+            <p className="mt-2 text-xs sm:text-sm leading-6 text-muted-foreground">
+              Sign in with your administrator email and password.
+            </p>
+            <form onSubmit={submit} className="mt-6 space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-xs sm:text-sm font-semibold">Email</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  className="mt-2 pr-10"
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="admin@school.edu.ng"
+                  className="mt-1.5 text-xs sm:text-sm h-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground mt-1"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs sm:text-sm font-semibold">Password</Label>
+                  <Link
+                    className="text-xs font-medium text-primary hover:underline"
+                    to="/forgot-password"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative mt-1.5">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    className="pr-10 text-xs sm:text-sm h-10"
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full gradient-primary text-primary-foreground shadow-elegant text-xs sm:text-sm font-semibold py-5 mt-3"
+                size="lg"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? "Signing in…" : "Sign in"}
+              </Button>
+            </form>
+
+            {/* ── ONBOARDING CALLOUT FOR UNREGISTERED USERS ── */}
+            <div className="mt-6 pt-5 border-t border-border/80 text-center space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Haven't onboarded your school yet?
+              </p>
+              <Button asChild variant="outline" size="sm" className="w-full text-xs font-semibold gap-1.5 border-primary/30 hover:bg-primary/5 text-primary">
+                <Link to="/register-school">
+                  Register & Onboard School Workspace →
+                </Link>
+              </Button>
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full gradient-primary text-primary-foreground shadow-elegant"
-              size="lg"
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? "Signing in…" : "Sign in"}
-            </Button>
-          </form>
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Enter your school's unique code to view and manage its data.
-          </p>
-          <div className="mt-5 flex justify-center gap-4 text-xs text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground">
-              Privacy
-            </Link>
-            <Link to="/terms" className="hover:text-foreground">
-              Terms
-            </Link>
-          </div>
-        </Card>
+
+            <div className="mt-4 pt-3 border-t border-border/40 flex flex-col gap-2 text-center text-xs text-muted-foreground">
+              <p>
+                Are you a teacher or staff member?{" "}
+                <Link to="/teacher-login" className="font-semibold text-primary hover:underline">
+                  Teacher Login
+                </Link>
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border/70 flex justify-center gap-4 text-xs text-muted-foreground">
+              <Link to="/privacy" className="hover:text-foreground">
+                Privacy Policy
+              </Link>
+              <span>·</span>
+              <Link to="/terms" className="hover:text-foreground">
+                Terms of Service
+              </Link>
+            </div>
+          </Card>
+        </div>
+
+        {/* Mobile bottom credits */}
+        <div className="pt-6 pb-2 text-center text-xs text-muted-foreground lg:hidden">
+          © {new Date().getFullYear()} iCademia Technologies
+        </div>
       </div>
     </div>
   );

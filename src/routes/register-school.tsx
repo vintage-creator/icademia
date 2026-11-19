@@ -11,6 +11,14 @@ import {
   Eye,
   EyeOff,
   Share2,
+  ShieldCheck,
+  FileCheck2,
+  Scale,
+  CreditCard,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
@@ -48,15 +56,125 @@ const steps = [
   { title: "Review", description: "Confirm and submit", icon: Check },
 ];
 
+const CUSTOM_LOCATION_VALUE = "__custom";
+const ONBOARDING_DRAFT_KEY = "icademia:onboarding-draft:v1";
+
+type OnboardingDraft = {
+  step?: number;
+  accepted?: boolean;
+  name?: string;
+  type?: string;
+  motto?: string;
+  selectedState?: string;
+  customState?: string;
+  selectedCity?: string;
+  customCity?: string;
+  address?: string;
+  adminName?: string;
+  adminEmail?: string;
+  adminPhone?: string;
+  studentCount?: string;
+  referralCode?: string;
+};
+
+const nigerianStates = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "Federal Capital Territory",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+];
+
+const stateCities: Record<string, string[]> = {
+  Abia: ["Aba", "Umuahia", "Ohafia", "Arochukwu"],
+  Adamawa: ["Yola", "Mubi", "Numan", "Jimeta"],
+  "Akwa Ibom": ["Uyo", "Eket", "Ikot Ekpene", "Oron"],
+  Anambra: ["Awka", "Onitsha", "Nnewi", "Ekwulobia"],
+  Bauchi: ["Bauchi", "Azare", "Misau", "Jama'are"],
+  Bayelsa: ["Yenagoa", "Brass", "Ogbia", "Sagbama"],
+  Benue: ["Makurdi", "Gboko", "Otukpo", "Katsina-Ala"],
+  Borno: ["Maiduguri", "Biu", "Monguno", "Dikwa"],
+  "Cross River": ["Calabar", "Ikom", "Ogoja", "Ugep"],
+  Delta: ["Asaba", "Warri", "Sapele", "Ughelli"],
+  Ebonyi: ["Abakaliki", "Afikpo", "Onueke", "Ishieke"],
+  Edo: ["Benin City", "Auchi", "Ekpoma", "Uromi"],
+  Ekiti: ["Ado-Ekiti", "Ikere-Ekiti", "Iworoko", "Efon-Alaaye"],
+  Enugu: ["Enugu", "Nsukka", "Agbani", "Udi"],
+  "Federal Capital Territory": ["Abuja", "Gwagwalada", "Kubwa", "Kuje"],
+  Gombe: ["Gombe", "Kaltungo", "Billiri", "Dukku"],
+  Imo: ["Owerri", "Orlu", "Okigwe", "Mbaise"],
+  Jigawa: ["Dutse", "Hadejia", "Gumel", "Kazaure"],
+  Kaduna: ["Kaduna", "Zaria", "Kafanchan", "Kagoro"],
+  Kano: ["Kano", "Wudil", "Gwarzo", "Bichi"],
+  Katsina: ["Katsina", "Daura", "Funtua", "Dutsin-Ma"],
+  Kebbi: ["Birnin Kebbi", "Argungu", "Yauri", "Zuru"],
+  Kogi: ["Lokoja", "Okene", "Kabba", "Idah"],
+  Kwara: ["Ilorin", "Offa", "Omu-Aran", "Jebba"],
+  Lagos: ["Ikeja", "Lagos Island", "Lekki", "Surulere", "Epe", "Ikorodu", "Badagry"],
+  Nasarawa: ["Lafia", "Keffi", "Akwanga", "Karu"],
+  Niger: ["Minna", "Bida", "Suleja", "Kontagora"],
+  Ogun: ["Abeokuta", "Ijebu Ode", "Sagamu", "Ota"],
+  Ondo: ["Akure", "Ondo", "Owo", "Ikare-Akoko"],
+  Osun: ["Osogbo", "Ile-Ife", "Ilesa", "Ede"],
+  Oyo: ["Ibadan", "Ogbomoso", "Oyo", "Iseyin"],
+  Plateau: ["Jos", "Bukuru", "Pankshin", "Shendam"],
+  Rivers: ["Port Harcourt", "Obio-Akpor", "Bonny", "Ahoada"],
+  Sokoto: ["Sokoto", "Tambuwal", "Wurno", "Gwadabawa"],
+  Taraba: ["Jalingo", "Wukari", "Bali", "Takum"],
+  Yobe: ["Damaturu", "Potiskum", "Nguru", "Gashua"],
+  Zamfara: ["Gusau", "Kaura Namoda", "Talata Mafara", "Anka"],
+};
+
 function RegisterSchool() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState<{ schoolCode: string } | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState("Creating workspace…");
+  const [done, setDone] = useState<{
+    registryId: string;
+    emailDelivery?: "sent" | "not_configured" | "delayed" | "failed";
+  } | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [openAgreementClause, setOpenAgreementClause] = useState<string | null>("clause-1");
   const [name, setName] = useState("");
   const [type, setType] = useState("secondary");
   const [motto, setMotto] = useState("");
-  const [city, setCity] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [customState, setCustomState] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [customCity, setCustomCity] = useState("");
+  const [address, setAddress] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPhone, setAdminPhone] = useState("");
@@ -65,6 +183,75 @@ function RegisterSchool() {
   const [referralCode, setReferralCode] = useState("");
   const [refAutoFilled, setRefAutoFilled] = useState(false);
   const progress = Math.round((step / steps.length) * 100);
+
+  const stateName = selectedState === CUSTOM_LOCATION_VALUE ? customState.trim() : selectedState;
+  const cityName = selectedCity === CUSTOM_LOCATION_VALUE ? customCity.trim() : selectedCity;
+  const location = [cityName, stateName].filter(Boolean).join(", ");
+  const cityOptions = selectedState ? stateCities[selectedState] || [] : [];
+
+  useEffect(() => {
+    try {
+      const rawDraft = window.localStorage.getItem(ONBOARDING_DRAFT_KEY);
+      if (!rawDraft) return;
+      const draft = JSON.parse(rawDraft) as OnboardingDraft;
+      if (draft.step && draft.step >= 1 && draft.step <= steps.length) setStep(draft.step);
+      if (typeof draft.accepted === "boolean") setAccepted(draft.accepted);
+      if (draft.name) setName(draft.name);
+      if (draft.type) setType(draft.type);
+      if (draft.motto) setMotto(draft.motto);
+      if (draft.selectedState) setSelectedState(draft.selectedState);
+      if (draft.customState) setCustomState(draft.customState);
+      if (draft.selectedCity) setSelectedCity(draft.selectedCity);
+      if (draft.customCity) setCustomCity(draft.customCity);
+      if (draft.address) setAddress(draft.address);
+      if (draft.adminName) setAdminName(draft.adminName);
+      if (draft.adminEmail) setAdminEmail(draft.adminEmail);
+      if (draft.adminPhone) setAdminPhone(draft.adminPhone);
+      if (draft.studentCount) setStudentCount(draft.studentCount);
+      if (draft.referralCode) setReferralCode(draft.referralCode);
+    } catch {
+      window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (done) return;
+    const draft: OnboardingDraft = {
+      step,
+      accepted,
+      name,
+      type,
+      motto,
+      selectedState,
+      customState,
+      selectedCity,
+      customCity,
+      address,
+      adminName,
+      adminEmail,
+      adminPhone,
+      studentCount,
+      referralCode,
+    };
+    window.localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft));
+  }, [
+    accepted,
+    address,
+    adminEmail,
+    adminName,
+    adminPhone,
+    customCity,
+    customState,
+    done,
+    motto,
+    name,
+    referralCode,
+    selectedCity,
+    selectedState,
+    step,
+    studentCount,
+    type,
+  ]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -79,41 +266,69 @@ function RegisterSchool() {
   }, []);
 
   const canContinue = useMemo(() => {
-    if (step === 1) return name.trim().length >= 2 && city.trim().length >= 2;
+    if (step === 1) {
+      return (
+        name.trim().length >= 2 &&
+        stateName.length >= 2 &&
+        cityName.length >= 2 &&
+        address.trim().length >= 5
+      );
+    }
     if (step === 2) {
       return (
         adminName.trim().length >= 2 && /\S+@\S+\.\S+/.test(adminEmail) && adminPassword.length >= 8
       );
     }
     return accepted;
-  }, [accepted, adminEmail, adminName, adminPassword, city, name, step]);
+  }, [accepted, address, adminEmail, adminName, adminPassword, cityName, name, stateName, step]);
 
   const submit = async () => {
     if (!accepted) return;
     setLoading(true);
+    setLoadingMessage("Creating secure workspace…");
+    const progressTimer = window.setTimeout(() => {
+      setLoadingMessage("Still setting things up…");
+    }, 1800);
+    let timeoutTimer: number | undefined;
     try {
-      const result = await registerSchoolDb({
-        data: {
-          name,
-          type,
-          motto,
-          city,
-          adminName,
-          adminEmail,
-          adminPhone,
-          studentCount,
-          adminPassword,
-          referralCode: referralCode.trim() || undefined,
-        },
-      });
-      setDone({ schoolCode: result.schoolCode });
+      const result = await Promise.race([
+        registerSchoolDb({
+          data: {
+            name,
+            type,
+            motto,
+            city: location,
+            address,
+            adminName,
+            adminEmail,
+            adminPhone,
+            studentCount,
+            adminPassword,
+            referralCode: referralCode.trim() || undefined,
+          },
+        }),
+        new Promise<never>((_, reject) => {
+          timeoutTimer = window.setTimeout(() => {
+            reject(
+              new Error(
+                "The signup service is taking too long to respond. Please check the database connection and try again.",
+              ),
+            );
+          }, 20000);
+        }),
+      ]);
+      setDone({ registryId: result.registryId, emailDelivery: result.emailDelivery });
+      window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
       toast.success("School workspace created");
     } catch (error) {
       toast.error("Registration failed", {
         description: error instanceof Error ? error.message : "Please review your details.",
       });
     } finally {
+      window.clearTimeout(progressTimer);
+      if (timeoutTimer) window.clearTimeout(timeoutTimer);
       setLoading(false);
+      setLoadingMessage("Creating workspace…");
     }
   };
 
@@ -130,7 +345,8 @@ function RegisterSchool() {
               Your school workspace, one clear step at a time.
             </h1>
             <p className="mt-4 text-muted-foreground">
-              You can add teachers, subjects, classes, students and branding after verification.
+              Enter only the essentials now. We generate a unique School Registry ID automatically;
+              staff, students, subjects and branding can be added after verification.
             </p>
           </div>
 
@@ -141,15 +357,17 @@ function RegisterSchool() {
                 Check your administrator email
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Your workspace is ready. Use the 24-hour verification link before signing in.
+                {done.emailDelivery === "delayed" || done.emailDelivery === "failed"
+                  ? "Your workspace is ready. The verification email may take a little longer to arrive; please check your inbox and spam folder shortly."
+                  : "Your workspace is ready. Use the 24-hour verification link before signing in."}
               </p>
               <div className="mx-auto mt-6 max-w-sm rounded-xl bg-muted p-5">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                  School code
+                  School Registry ID
                 </p>
-                <p className="mt-2 font-mono text-2xl font-bold text-primary">{done.schoolCode}</p>
+                <p className="mt-2 font-mono text-2xl font-bold text-primary">{done.registryId}</p>
               </div>
-              <Button asChild className="mt-7">
+              <Button asChild className="mt-7 w-full sm:w-auto">
                 <Link to="/login">Continue to sign in</Link>
               </Button>
             </Card>
@@ -168,6 +386,9 @@ function RegisterSchool() {
                     style={{ width: `${progress}%` }}
                   />
                 </div>
+                <p className="mt-3 text-[11px] text-white/60">
+                  Draft saved on this device. For security, your password is not saved.
+                </p>
                 <div className="mt-6 grid grid-cols-3 gap-2">
                   {steps.map((item, index) => {
                     const number = index + 1;
@@ -206,66 +427,122 @@ function RegisterSchool() {
                 {step === 1 && (
                   <StepSection
                     title="Tell us about the school"
-                    description="These details identify the institution and prepare its workspace."
+                    description="No identifier is required. iCademia creates a school-specific Registry ID after registration."
                   >
-                    <Field
-                      label="School name"
-                      placeholder="Britarch Secondary School"
-                      required
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                    />
-                    <SelectField
-                      label="School type"
-                      value={type}
-                      onValueChange={setType}
-                      options={[
-                        ["primary", "Primary"],
-                        ["secondary", "Secondary"],
-                        ["college", "College / Tertiary"],
-                      ]}
-                    />
-                    <Field
-                      label="School motto"
-                      placeholder="Knowledge · Integrity · Service"
-                      value={motto}
-                      onChange={(event) => setMotto(event.target.value)}
-                    />
-                    <Field
-                      label="City / State"
-                      placeholder="Lagos, Nigeria"
-                      required
-                      value={city}
-                      onChange={(event) => setCity(event.target.value)}
-                    />
-                    <SelectField
-                      label="Approximate student count"
-                      value={studentCount}
-                      onValueChange={setStudentCount}
-                      options={[
-                        ["<200", "Under 200"],
-                        ["200-500", "200 – 500"],
-                        ["500-1000", "500 – 1,000"],
-                        [">1000", "Over 1,000"],
-                      ]}
-                    />
-                    <div>
+                    <FormGroup title="School identity">
                       <Field
-                        label="Referral code (optional)"
-                        placeholder="ICA-REF-XXXXXXXX"
-                        value={referralCode}
-                        onChange={(event) => {
-                          setReferralCode(event.target.value.toUpperCase());
-                          setRefAutoFilled(false);
-                        }}
+                        label="School name"
+                        placeholder="Britarch Secondary School"
+                        required
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
                       />
-                      {refAutoFilled && (
-                        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-success font-medium">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Referral code applied automatically from link!
-                        </p>
+                      <SelectField
+                        label="School type"
+                        value={type}
+                        onValueChange={setType}
+                        options={[
+                          ["primary", "Primary"],
+                          ["secondary", "Secondary"],
+                          ["both", "Primary & Secondary"],
+                          ["college", "College / Tertiary"],
+                        ]}
+                      />
+                      <Field
+                        label="School motto"
+                        placeholder="Knowledge · Integrity · Service"
+                        value={motto}
+                        onChange={(event) => setMotto(event.target.value)}
+                      />
+                    </FormGroup>
+                    <FormGroup title="School location">
+                      <SelectField
+                        label="State"
+                        value={selectedState}
+                        onValueChange={(value) => {
+                          setSelectedState(value);
+                          setSelectedCity("");
+                          setCustomCity("");
+                        }}
+                        placeholder="Select state"
+                        options={[
+                          ...nigerianStates.map((state) => [state, state] as [string, string]),
+                          [CUSTOM_LOCATION_VALUE, "State not listed"],
+                        ]}
+                      />
+                      {selectedState === CUSTOM_LOCATION_VALUE && (
+                        <Field
+                          label="Enter state / region"
+                          placeholder="Enter your state, province or region"
+                          required
+                          value={customState}
+                          onChange={(event) => setCustomState(event.target.value)}
+                        />
                       )}
-                    </div>
+                      <SelectField
+                        label="City"
+                        value={selectedCity}
+                        onValueChange={setSelectedCity}
+                        placeholder={selectedState ? "Select city" : "Select state first"}
+                        disabled={!selectedState}
+                        options={[
+                          ...cityOptions.map((city) => [city, city] as [string, string]),
+                          [CUSTOM_LOCATION_VALUE, "City not listed"],
+                        ]}
+                      />
+                      {selectedCity === CUSTOM_LOCATION_VALUE && (
+                        <Field
+                          label="Enter city / town"
+                          placeholder="Enter city, town or LGA"
+                          required
+                          value={customCity}
+                          onChange={(event) => setCustomCity(event.target.value)}
+                        />
+                      )}
+                      <div className="sm:col-span-2">
+                        <Field
+                          label="Campus address"
+                          placeholder="Plot 18 School Road, New Owerri"
+                          required
+                          value={address}
+                          onChange={(event) => setAddress(event.target.value)}
+                        />
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                          Used for registry verification, delivery, school profile and official
+                          result documents.
+                        </p>
+                      </div>
+                    </FormGroup>
+                    <FormGroup title="Operational details">
+                      <SelectField
+                        label="Approximate student count"
+                        value={studentCount}
+                        onValueChange={setStudentCount}
+                        options={[
+                          ["<200", "Under 200"],
+                          ["200-500", "200 – 500"],
+                          ["500-1000", "500 – 1,000"],
+                          [">1000", "Over 1,000"],
+                        ]}
+                      />
+                      <div>
+                        <Field
+                          label="Referral code (optional)"
+                          placeholder="ICA-REF-XXXXXXXX"
+                          value={referralCode}
+                          onChange={(event) => {
+                            setReferralCode(event.target.value.toUpperCase());
+                            setRefAutoFilled(false);
+                          }}
+                        />
+                        {refAutoFilled && (
+                          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-success font-medium">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Referral code applied automatically from link!
+                          </p>
+                        )}
+                      </div>
+                    </FormGroup>
                   </StepSection>
                 )}
 
@@ -307,47 +584,248 @@ function RegisterSchool() {
                 )}
 
                 {step === 3 && (
-                  <div>
-                    <h2 className="font-display text-2xl font-bold">Review your information</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Confirm the details before creating the workspace.
-                    </p>
-                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                      <Review label="School" value={name} />
-                      <Review label="Type" value={type} />
-                      <Review label="Location" value={city} />
-                      <Review label="Students" value={studentCount} />
-                      <Review label="Administrator" value={adminName} />
-                      <Review label="Email" value={adminEmail} />
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="font-display text-2xl font-bold">
+                        Review & Institutional Agreement
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Review your school workspace setup and confirm the institutional operating
+                        agreement.
+                      </p>
                     </div>
-                    <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 text-sm leading-6">
-                      <input
-                        type="checkbox"
-                        checked={accepted}
-                        onChange={(event) => setAccepted(event.target.checked)}
-                        className="mt-1 h-4 w-4 accent-primary"
+
+                    <div className="grid gap-3 sm:grid-cols-2 rounded-2xl bg-muted/40 p-4 border border-border">
+                      <Review label="School Name" value={name} />
+                      <Review
+                        label="School Tier"
+                        value={
+                          type === "secondary"
+                            ? "Secondary School (JSS/SSS)"
+                            : type === "primary"
+                              ? "Primary School (Basic 1-6)"
+                              : type === "both"
+                                ? "Primary & Secondary Combined"
+                                : type
+                        }
                       />
-                      <span>
-                        I confirm that I am authorised to register this school and agree to the{" "}
-                        <Link to="/terms" className="font-semibold text-primary hover:underline">
-                          Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link to="/privacy" className="font-semibold text-primary hover:underline">
-                          Privacy Policy
-                        </Link>
-                        .
-                      </span>
-                    </label>
+                      <Review label="Location" value={location} />
+                      <Review label="Address" value={address} />
+                      <Review label="Student Body Size" value={studentCount} />
+                      <Review label="Designated Administrator" value={adminName} />
+                      <Review label="Official Admin Email" value={adminEmail} />
+                    </div>
+
+                    {/* ── Institutional Onboarding Agreement ── */}
+                    <div className="rounded-2xl border border-primary/20 bg-primary/[0.02] p-5 sm:p-6 space-y-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                          <FileCheck2 className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground text-sm sm:text-base">
+                            Institutional Workspace Agreement
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Review the operating clauses that govern your school workspace before
+                            creating the portal.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-background/80 p-4 text-xs leading-6 text-muted-foreground">
+                        This summary forms part of the onboarding acceptance for the institution
+                        named above. It should be read together with the iCademia Terms of Service
+                        and Privacy Policy. Where a signed school agreement exists, that signed
+                        agreement takes precedence for the matters it expressly covers.
+                      </div>
+
+                      <div className="space-y-2.5 pt-1">
+                        <AgreementCategoryCard
+                          icon={Building2}
+                          id="clause-1"
+                          open={openAgreementClause === "clause-1"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 1"
+                          title="Authority to register the institution"
+                          points={[
+                            "The registering person confirms that they are at least 18 years old and authorised by the school, proprietor, board, principal or delegated leadership to create this workspace.",
+                            "The school information supplied during onboarding must be accurate, current and capable of verification where required.",
+                            "If school leadership changes, the school is responsible for notifying iCademia and completing the required administrator-transfer checks.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={ShieldCheck}
+                          id="clause-2"
+                          open={openAgreementClause === "clause-2"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 2"
+                          title="School responsibilities"
+                          points={[
+                            "The school remains responsible for student enrolment records, staff access decisions, academic calendars, grading rules, result approval and communication with parents or guardians.",
+                            "The school must ensure that only authorised staff receive workspace access and that accounts are removed or changed when staff roles change.",
+                            "The school is responsible for checking uploaded records before publication and for requesting corrections where an error is discovered.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={Lock}
+                          id="clause-3"
+                          open={openAgreementClause === "clause-3"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 3"
+                          title="Student data, privacy and child protection"
+                          points={[
+                            "Student biodata, assessment records, attendance data, photographs, uploaded scripts and related school records are processed only for authorised school-management purposes.",
+                            "iCademia does not sell student records. Limited processing by hosting, storage, payment, email, AI or support providers may occur only where needed to deliver and protect the service.",
+                            "The school must obtain any internal permissions or notices required for the lawful use of student, parent, guardian and staff information on the platform.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={Scale}
+                          id="clause-4"
+                          open={openAgreementClause === "clause-4"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 4"
+                          title="Academic records, results and publication control"
+                          points={[
+                            "The school warrants that scores, comments, positions, attendance, psychomotor details and uploaded documents supplied to iCademia are genuine and authorised.",
+                            "iCademia may calculate, format, summarise or display academic information from school-supplied data, but final academic responsibility remains with the school.",
+                            "Publication may be blocked until expected subjects are submitted or formally waived by the School Admin with a clear administrative reason.",
+                            "Student or parent access to a result remains subject to the school’s publication settings, restrictions and identity checks, even where an access card exists.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={UserRound}
+                          id="clause-5"
+                          open={openAgreementClause === "clause-5"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 5"
+                          title="Users, staff access and administrator control"
+                          points={[
+                            "The School Admin controls school setup, staff invitations, Head Teacher access, result publication, restrictions, school settings and operational oversight.",
+                            "Head Teachers may access only the academic workspace and classes assigned to them by the School Admin.",
+                            "Ordinary teaching staff may be recorded for timetable, subjects and class responsibility without automatically receiving Head Teacher workspace access.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={CreditCard}
+                          id="clause-6"
+                          open={openAgreementClause === "clause-6"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 6"
+                          title="Access cards, billing and delivery"
+                          points={[
+                            "Access cards are school-scoped credentials used by students or guardians to view services that the school has approved for release.",
+                            "A card may provide 365-day access from activation, subject to school restrictions, platform terms, valid identity checks and any written arrangement with the school.",
+                            "Physical card delivery, replacement, refunds and reconciliation are handled according to the applicable order details, payment confirmation and iCademia Terms of Service.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={Info}
+                          id="clause-7"
+                          open={openAgreementClause === "clause-7"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 7"
+                          title="AI-assisted features"
+                          points={[
+                            "AI features may assist with summaries, result interpretation, study guidance, quiz drafting, workload observations and operational recommendations.",
+                            "Student-facing AI explanations and quizzes are available only from result records that the school has approved and published, and may be withdrawn if result access is restricted.",
+                            "AI outputs are advisory and may be incomplete or inaccurate. They must be reviewed by authorised school personnel before being used for decisions or communication.",
+                            "AI should not be used as the sole basis for promotion, discipline, admission, employment, safeguarding or other high-impact school decisions.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={ShieldCheck}
+                          id="clause-8"
+                          open={openAgreementClause === "clause-8"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 8"
+                          title="Service operation, support and record keeping"
+                          points={[
+                            "iCademia will take reasonable steps to provide a secure and reliable school-management service, including administrative traceability and relevant operational logs.",
+                            "Service availability may be affected by maintenance, internet connectivity, hosting providers, school configuration or events outside reasonable control.",
+                            "Support may be provided through in-app, email, phone or messaging channels depending on the issue, plan and urgency.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={Scale}
+                          id="clause-9"
+                          open={openAgreementClause === "clause-9"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 9"
+                          title="Suspension, correction and termination"
+                          points={[
+                            "iCademia may restrict, suspend or review access where required to protect students, investigate misuse, address unpaid services, respond to legal obligations or prevent harm.",
+                            "The school may request correction, export or termination of its workspace subject to identity verification, outstanding orders and lawful record-retention requirements.",
+                            "Corrections to published academic records must be authorised by the school and may remain traceable for audit and accountability.",
+                          ]}
+                        />
+
+                        <AgreementCategoryCard
+                          icon={FileCheck2}
+                          id="clause-10"
+                          open={openAgreementClause === "clause-10"}
+                          onToggle={setOpenAgreementClause}
+                          badge="Clause 10"
+                          title="Acceptance record"
+                          points={[
+                            "By creating the workspace, the accepting administrator confirms authority to bind or act for the named school for onboarding purposes.",
+                            "The platform may record the accepting administrator’s name, email, school, date, time, IP-related metadata and agreement version for accountability.",
+                            "Continued use of the workspace is subject to the Terms of Service, Privacy Policy and any later written agreement signed with the school.",
+                          ]}
+                        />
+                      </div>
+
+                      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border-2 border-primary/20 bg-background p-4 text-sm leading-6 transition-colors hover:border-primary/40">
+                        <input
+                          type="checkbox"
+                          checked={accepted}
+                          onChange={(event) => setAccepted(event.target.checked)}
+                          className="mt-1 h-5 w-5 accent-primary cursor-pointer rounded"
+                        />
+                        <span className="font-medium text-foreground text-xs sm:text-sm">
+                          I have reviewed and agree to the{" "}
+                          <span className="text-primary font-semibold">
+                            Institutional Onboarding Agreement
+                          </span>
+                          , including the{" "}
+                          <Link
+                            to="/terms"
+                            target="_blank"
+                            className="font-semibold text-primary hover:underline"
+                          >
+                            Terms of Service
+                          </Link>{" "}
+                          and{" "}
+                          <Link
+                            to="/privacy"
+                            target="_blank"
+                            className="font-semibold text-primary hover:underline"
+                          >
+                            Privacy Policy
+                          </Link>
+                          . I confirm authorisation to register this school.
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
 
-                <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
+                <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
                   <Button
                     type="button"
                     variant="ghost"
                     disabled={step === 1 || loading}
                     onClick={() => setStep((current) => current - 1)}
+                    className="w-full sm:w-auto"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                   </Button>
@@ -356,13 +834,21 @@ function RegisterSchool() {
                       type="button"
                       disabled={!canContinue}
                       onClick={() => setStep((current) => current + 1)}
+                      className="w-full sm:w-auto"
                     >
                       Continue <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="button" disabled={!canContinue || loading} onClick={submit}>
+                    <Button
+                      type="button"
+                      disabled={!canContinue || loading}
+                      onClick={submit}
+                      className="w-full sm:w-auto"
+                    >
                       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {loading ? "Creating workspace…" : "Create school workspace"}
+                      <span className="min-w-0 truncate">
+                        {loading ? loadingMessage : "Create school workspace"}
+                      </span>
                     </Button>
                   )}
                 </div>
@@ -396,6 +882,15 @@ function StepSection({
       <h2 className="font-display text-2xl font-bold">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <div className="mt-6 grid gap-5 sm:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+function FormGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/20 p-4 sm:col-span-2 sm:p-5">
+      <h3 className="font-display text-sm font-semibold text-foreground">{title}</h3>
+      <div className="mt-4 grid gap-5 sm:grid-cols-2">{children}</div>
     </div>
   );
 }
@@ -449,18 +944,22 @@ function SelectField({
   value,
   onValueChange,
   options,
+  placeholder = "Select option",
+  disabled = false,
 }: {
   label: string;
   value: string;
   onValueChange: (value: string) => void;
   options: Array<[string, string]>;
+  placeholder?: string;
+  disabled?: boolean;
 }) {
   return (
     <div>
       <Label>{label}</Label>
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
         <SelectTrigger className="mt-2">
-          <SelectValue />
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           {options.map(([optionValue, labelText]) => (
@@ -479,6 +978,64 @@ function Review({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-border p-4">
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 font-medium capitalize">{value || "Not provided"}</p>
+    </div>
+  );
+}
+
+function AgreementCategoryCard({
+  icon: Icon,
+  id,
+  open,
+  onToggle,
+  badge,
+  title,
+  points,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  id: string;
+  open: boolean;
+  onToggle: (id: string | null) => void;
+  badge: string;
+  title: string;
+  points: string[];
+}) {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/90 overflow-hidden transition-all shadow-xs">
+      <button
+        type="button"
+        onClick={() => onToggle(open ? null : id)}
+        className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary mr-2 bg-primary/10 px-1.5 py-0.5 rounded">
+              {badge}
+            </span>
+            <span className="text-xs sm:text-sm font-semibold text-foreground">{title}</span>
+          </div>
+        </div>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+        )}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-3.5 pt-1 border-t border-border/40 bg-muted/10">
+          <ul className="space-y-1.5 text-xs text-muted-foreground">
+            {points.map((pt, i) => (
+              <li key={i} className="flex items-start gap-2 leading-relaxed">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600 mt-0.5" />
+                <span>{pt}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

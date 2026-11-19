@@ -2,18 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
   Users,
-  KeyRound,
   GraduationCap,
   TrendingUp,
   ArrowUpRight,
   CheckCircle2,
   Loader2,
-  BrainCircuit,
+  ShieldCheck,
+  BookOpenCheck,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getDashboardStatsDb, getStudentsDb, getPinsDb } from "@/lib/api/db.functions";
-import { cn, getSchoolCode } from "@/lib/utils";
+import { getDashboardStatsDb, getStudentsDb } from "@/lib/api/db.functions";
+import { cn, getAdminToken, getSchoolCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({ meta: [{ title: "Dashboard — iCademia" }] }),
@@ -28,6 +28,7 @@ function Overview() {
     pinsUsed: number;
     pinsUnused: number;
     resultsCount: number;
+    pendingReviews: number;
   };
   type DashboardStudent = {
     id: number;
@@ -37,34 +38,51 @@ function Overview() {
     average_score?: number | string | null;
     results_count: number;
   };
-  type DashboardPin = {
-    id: number;
-    serial: string;
-    pin: string;
-    status: string;
-    used_by?: string | null;
-    created_at?: string;
-  };
-  const [dbStats, setDbStats] = useState<DashboardStats | null>(null);
-  const [students, setStudents] = useState<DashboardStudent[]>([]);
-  const [pins, setPins] = useState<DashboardPin[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openStep, setOpenStep] = useState<number | null>(0);
-
   const schoolCode = getSchoolCode();
+
+  // Instant SWR Cache: Load cached stats immediately to eliminate render delay & flash
+  const [dbStats, setDbStats] = useState<DashboardStats | null>(() => {
+    if (typeof window === "undefined" || !schoolCode) return null;
+    try {
+      const cached = localStorage.getItem(`icademia_dashboard_stats_${schoolCode}`);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [students, setStudents] = useState<DashboardStudent[]>(() => {
+    if (typeof window === "undefined" || !schoolCode) return [];
+    try {
+      const cached = localStorage.getItem(`icademia_dashboard_students_${schoolCode}`);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [loading, setLoading] = useState(!dbStats);
+  const [openStep, setOpenStep] = useState<number | null>(0);
 
   useEffect(() => {
     const loadOverview = async () => {
-      setLoading(true);
+      if (schoolCode.length < 4) {
+        setLoading(false);
+        return;
+      }
       try {
-        const [statsData, studentsData, pinsData] = await Promise.all([
-          getDashboardStatsDb({ data: { schoolCode } }),
-          getStudentsDb({ data: { schoolCode } }),
-          getPinsDb({ data: { schoolCode } }),
+        const [statsData, studentsData] = await Promise.all([
+          getDashboardStatsDb({ data: { token: getAdminToken(), schoolCode } }),
+          getStudentsDb({ data: { token: getAdminToken(), schoolCode } }),
         ]);
         setDbStats(statsData);
         setStudents(studentsData as unknown as DashboardStudent[]);
-        setPins(pinsData.slice(0, 5) as unknown as DashboardPin[]); // Just show latest 5
+        try {
+          localStorage.setItem(`icademia_dashboard_stats_${schoolCode}`, JSON.stringify(statsData));
+          localStorage.setItem(`icademia_dashboard_students_${schoolCode}`, JSON.stringify(studentsData));
+        } catch {
+          // fallback to memory
+        }
       } catch (err) {
         console.error("Dashboard overview load failed:", err);
       } finally {
@@ -81,6 +99,7 @@ function Overview() {
     pinsUsed: 0,
     pinsUnused: 0,
     resultsCount: 0,
+    pendingReviews: 0,
   };
 
   const kpis = [
@@ -99,11 +118,13 @@ function Overview() {
       tone: "accent",
     },
     {
-      label: "PINs issued",
-      value: stats.pinsTotal.toLocaleString(),
-      delta: `${stats.pinsUsed} used · ${stats.pinsUnused} unused`,
-      icon: KeyRound,
-      tone: "success",
+      label: "Awaiting review",
+      value: stats.pendingReviews.toString(),
+      delta: stats.pendingReviews
+        ? "Head Teacher submissions need attention"
+        : "Review queue is clear",
+      icon: CheckCircle2,
+      tone: stats.pendingReviews ? "warning" : "success",
     },
     {
       label: "Published Reports",
@@ -113,6 +134,13 @@ function Overview() {
       tone: "warning",
     },
   ];
+
+  const onboardingComplete =
+    stats.studentsCount > 0 &&
+    stats.teachersCount > 0 &&
+    stats.resultsCount > 0 &&
+    stats.pinsTotal > 0;
+
   return (
     <div className="space-y-8 p-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -122,28 +150,36 @@ function Overview() {
         </div>
       </header>
 
-      <Card className="relative overflow-hidden border-border bg-[#07111f] text-white shadow-card">
-        <div>
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:24px_24px]" />
-            <div className="relative">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#d6a84b]">
-                Administrator intelligence
-              </p>
-              <h2 className="mt-2 max-w-xl font-display text-2xl font-semibold">
-                Turn this term’s records into decisions, not more spreadsheets.
+      <Card className="relative overflow-hidden border-primary/20 bg-primary/5 p-5 shadow-card sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">What needs attention</p>
+              <h2 className="mt-1 font-display text-xl font-semibold">
+                {stats.pendingReviews > 0
+                  ? `${stats.pendingReviews} result submission${stats.pendingReviews === 1 ? "" : "s"} waiting for review`
+                  : "Your result review queue is clear"}
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">
-                Audit result readiness, design learning interventions, plan staff responsibilities
-                and prepare a principal’s decision memo from de-identified school data.
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Review Head Teacher submissions, resolve missing subjects and publish only complete
+                result records.
               </p>
-              <Link
-                to="/dashboard/ai"
-                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#07111f]"
-              >
-                <BrainCircuit className="h-4 w-4" /> Open AI command centre
-              </Link>
             </div>
+          </div>
+          <div className="grid w-full gap-2 sm:grid-cols-2 lg:w-auto">
+            <Button asChild className="w-full lg:w-auto">
+              <Link to="/dashboard/results">
+                <ShieldCheck className="mr-1.5 h-4 w-4" /> Review results
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full bg-background lg:w-auto">
+              <Link to="/dashboard/classes">
+                <BookOpenCheck className="mr-1.5 h-4 w-4" /> Check academic setup
+              </Link>
+            </Button>
           </div>
         </div>
       </Card>
@@ -158,17 +194,21 @@ function Overview() {
               <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
             </div>
             <p className="mt-5 text-xs uppercase tracking-wider text-muted-foreground">{k.label}</p>
-            <p className="mt-1 font-display text-3xl font-semibold">{k.value}</p>
+            {loading && !dbStats ? (
+              <div className="mt-2 h-8 w-20 animate-pulse rounded bg-muted/60" />
+            ) : (
+              <p className="mt-1 font-display text-3xl font-semibold">{k.value}</p>
+            )}
             <p className="mt-1 text-xs text-muted-foreground">{k.delta}</p>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className={cn("grid gap-6", !onboardingComplete && "lg:grid-cols-[1.5fr_1fr]")}>
         <Card className="border-border p-6 shadow-card">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold">Top Performers</h2>
-            <span className="text-xs text-muted-foreground">Term Report · all classes</span>
+            <h2 className="font-display text-lg font-semibold">Recently published records</h2>
+            <span className="text-xs text-muted-foreground">All classes</span>
           </div>
           {loading ? (
             <div className="flex items-center justify-center py-10">
@@ -183,7 +223,7 @@ function Overview() {
               {students.slice(0, 5).map((s, i) => (
                 <li key={s.id} className="flex items-center gap-4 py-3">
                   <span className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
-                    {i + 1}
+                    {s.name.slice(0, 1).toUpperCase()}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm font-medium">{s.name}</p>
@@ -205,158 +245,145 @@ function Overview() {
           )}
         </Card>
 
-        <Card className="border-border p-6 shadow-card flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-display text-lg font-semibold">Onboarding progress</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Understand and configure the platform for your school</p>
+        {!onboardingComplete && (
+          <Card className="border-border p-6 shadow-card flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-display text-lg font-semibold">Onboarding progress</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Understand and configure the platform for your school
+                  </p>
+                </div>
+                <span className="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full shrink-0">
+                  {
+                    [
+                      stats.studentsCount > 0,
+                      stats.teachersCount > 0,
+                      true, // Classes mapped active
+                      stats.resultsCount > 0,
+                      stats.pinsTotal > 0,
+                    ].filter(Boolean).length
+                  }{" "}
+                  / 5 completed
+                </span>
               </div>
-              <span className="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full shrink-0">
+
+              <div className="mt-5 space-y-3">
                 {[
-                  stats.studentsCount > 0,
-                  stats.teachersCount > 0,
-                  true, // Classes mapped active
-                  stats.resultsCount > 0,
-                  stats.pinsTotal > 0
-                ].filter(Boolean).length} / 5 completed
-              </span>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {[
-                {
-                  id: 0,
-                  title: "1. Set up classes & subjects",
-                  desc: "Create the classes and subjects your school teaches before adding people to them.",
-                  role: "This structure determines which classes and subjects staff can be assigned to.",
-                  link: "/dashboard/classes",
-                  btnText: "Define Structure",
-                  complete: true, // Seeded default
-                },
-                {
-                  id: 1,
-                  title: "2. Invite teachers",
-                  desc: "Invite staff and give each person one clear responsibility: form teacher, subject teacher, head teacher or exam officer.",
-                  role: "Subject teachers enter only their assigned scores. Form teachers manage their class. Exam officers coordinate publishing.",
-                  link: "/dashboard/teachers",
-                  btnText: "Manage teachers",
-                  complete: stats.teachersCount > 0,
-                },
-                {
-                  id: 2,
-                  title: "3. Add students",
-                  desc: "Add your student roster one at a time or import all 70 Britarch students from a CSV template.",
-                  role: "Administrators maintain the roster and each student’s unique registration number.",
-                  link: "/dashboard/students",
-                  btnText: "Add students",
-                  complete: stats.studentsCount > 0,
-                },
-                {
-                  id: 3,
-                  title: "4. Publish term results",
-                  desc: "Review compiled grades, view class rankings, and publish student results.",
-                  role: "Teachers submit scores; Admins preview, digitally sign, and stamp report cards.",
-                  link: "/dashboard/results",
-                  btnText: "Review & Publish",
-                  complete: stats.resultsCount > 0,
-                },
-                {
-                  id: 4,
-                  title: "5. Issue Scratch Cards",
-                  desc: "Order annual access cards matching your current school enrollment.",
-                  role: "A single card grants parents 365-day access to term sheets and tutor remarks.",
-                  link: "/dashboard/pins",
-                  btnText: "Order Cards",
-                  complete: stats.pinsTotal > 0,
-                }
-              ].map((step, idx) => {
-                const isOpen = openStep === idx;
-                return (
-                  <div key={step.title} className={cn("border border-border rounded-xl transition-all overflow-hidden", step.complete ? "bg-card" : "bg-muted/10")}>
-                    <button
-                      type="button"
-                      onClick={() => setOpenStep(isOpen ? null : idx)}
-                      className="w-full flex items-center justify-between p-4 text-left font-semibold text-sm transition-all"
+                  {
+                    id: 0,
+                    title: "1. Set up classes & subjects",
+                    desc: "Create the classes and subjects your school teaches before adding people to them.",
+                    role: "This structure determines which classes and subjects staff can be assigned to.",
+                    link: "/dashboard/classes",
+                    btnText: "Define Structure",
+                    complete: true, // Seeded default
+                  },
+                  {
+                    id: 1,
+                    title: "2. Invite teachers",
+                    desc: "Add Head Teachers and assign them the classes they will support after the first results are ready.",
+                    role: "Once onboarding is complete, Head Teachers can enter results, publish class assignments and revision work, and follow up through their workspace. School Admins retain approval and publishing control.",
+                    link: "/dashboard/teachers",
+                    btnText: "Manage teachers",
+                    complete: stats.teachersCount > 0,
+                  },
+                  {
+                    id: 2,
+                    title: "3. Add students",
+                    desc: "Add your student roster one at a time or import a prepared CSV or Word template.",
+                    role: "Administrators maintain the roster and each student’s unique registration number.",
+                    link: "/dashboard/students",
+                    btnText: "Add students",
+                    complete: stats.studentsCount > 0,
+                  },
+                  {
+                    id: 3,
+                    title: "4. Review & publish results",
+                    desc: "iCademia can compile the school's first results. Check the scores, grades and remarks before students get access.",
+                    role: "The School Admin reviews, digitally signs and publishes. After getting started, Head Teachers can enter later results in the workspace for approval.",
+                    link: "/dashboard/results",
+                    btnText: "Review & Publish",
+                    complete: stats.resultsCount > 0,
+                  },
+                  {
+                    id: 4,
+                    title: "5. Issue Scratch Cards",
+                    desc: "Order annual access cards matching your current school enrollment.",
+                    role: "A single card grants parents 365-day access to term sheets and tutor remarks.",
+                    link: "/dashboard/pins",
+                    btnText: "Order Cards",
+                    complete: stats.pinsTotal > 0,
+                  },
+                ].map((step, idx) => {
+                  const isOpen = openStep === idx;
+                  return (
+                    <div
+                      key={step.title}
+                      className={cn(
+                        "border border-border rounded-xl transition-all overflow-hidden",
+                        step.complete ? "bg-card" : "bg-muted/10",
+                      )}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={cn("grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold shrink-0", step.complete ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}>
-                          {step.complete ? "✓" : idx + 1}
-                        </span>
-                        <span className={cn(step.complete ? "text-foreground font-semibold" : "text-muted-foreground")}>{step.title}</span>
-                      </div>
-                      <span className="text-muted-foreground text-xs font-normal">
-                        {isOpen ? "Hide" : "Show Guide"}
-                      </span>
-                    </button>
-
-                    {isOpen && (
-                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-border bg-muted/20 animate-in slide-in-from-top-1 duration-150">
-                        <p className="text-xs text-foreground leading-relaxed font-medium">{step.desc}</p>
-                        <div className="p-2.5 rounded-lg bg-card border border-border text-[11px] text-muted-foreground leading-relaxed">
-                          <strong className="text-foreground">Role & Responsibilities:</strong> {step.role}
+                      <button
+                        type="button"
+                        onClick={() => setOpenStep(isOpen ? null : idx)}
+                        className="w-full flex items-center justify-between p-4 text-left font-semibold text-sm transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={cn(
+                              "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold shrink-0",
+                              step.complete
+                                ? "bg-success/15 text-success"
+                                : "bg-muted text-muted-foreground",
+                            )}
+                          >
+                            {step.complete ? "✓" : idx + 1}
+                          </span>
+                          <span
+                            className={cn(
+                              step.complete
+                                ? "text-foreground font-semibold"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {step.title}
+                          </span>
                         </div>
-                        <Link to={step.link}>
-                          <Button size="sm" className="w-full mt-1 text-xs font-semibold gradient-primary text-primary-foreground shadow-sm gap-1">
-                            {step.btnText} <ArrowUpRight className="h-3.5 w-3.5" />
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
-      </div>
+                        <span className="text-muted-foreground text-xs font-normal">
+                          {isOpen ? "Hide" : "Show Guide"}
+                        </span>
+                      </button>
 
-      <Card className="border-border p-6 shadow-card">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Latest PIN batch</h2>
-          <span className="text-xs text-muted-foreground">Trial & Purchased Batches</span>
-        </div>
-        <div className="mt-5 overflow-x-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      {isOpen && (
+                        <div className="px-4 pb-4 pt-1 space-y-3 border-t border-border bg-muted/20 animate-in slide-in-from-top-1 duration-150">
+                          <p className="text-xs text-foreground leading-relaxed font-medium">
+                            {step.desc}
+                          </p>
+                          <div className="p-2.5 rounded-lg bg-card border border-border text-[11px] text-muted-foreground leading-relaxed">
+                            <strong className="text-foreground">Role & Responsibilities:</strong>{" "}
+                            {step.role}
+                          </div>
+                          <Link to={step.link}>
+                            <Button
+                              size="sm"
+                              className="w-full mt-1 text-xs font-semibold gradient-primary text-primary-foreground shadow-sm gap-1"
+                            >
+                              {step.btnText} <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ) : pins.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              No PIN cards generated yet.
-            </p>
-          ) : (
-            <table className="w-full min-w-[600px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="py-2.5">Serial</th>
-                  <th className="py-2.5">PIN</th>
-                  <th className="py-2.5">Status</th>
-                  <th className="py-2.5">Used by</th>
-                  <th className="py-2.5">Generated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pins.map((p) => (
-                  <tr key={p.id} className="border-b border-border/60">
-                    <td className="py-3 font-mono text-xs">{p.serial}</td>
-                    <td className="py-3 font-mono">{p.pin}</td>
-                    <td className="py-3">
-                      <StatusPill status={p.status} />
-                    </td>
-                    <td className="py-3 text-muted-foreground">{p.used_by ?? "—"}</td>
-                    <td className="py-3 text-muted-foreground">
-                      {p.created_at
-                        ? new Date(p.created_at).toLocaleDateString()
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </Card>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

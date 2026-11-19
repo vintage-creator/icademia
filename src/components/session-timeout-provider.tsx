@@ -3,9 +3,14 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ShieldAlert, Clock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  clearAdminSession,
+  clearTeacherSession,
+  hasValidLocalSession,
+  SESSION_IDLE_TIMEOUT_MS,
+  touchLocalSession,
+} from "@/lib/utils";
 
-// 15 Minutes Inactivity Limit (900,000 ms)
-const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 // 1 Minute Warning Threshold (60,000 ms)
 const WARNING_THRESHOLD_MS = 60 * 1000;
 
@@ -20,38 +25,78 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
   const resetActivity = () => {
     lastActivityRef.current = Date.now();
+    if (typeof window !== "undefined") {
+      if (hasValidLocalSession("admin")) touchLocalSession("admin");
+      if (hasValidLocalSession("teacher")) touchLocalSession("teacher");
+      window.dispatchEvent(new Event("icademia:session-updated"));
+    }
     if (showWarning) {
       setShowWarning(false);
     }
   };
 
-  // Activity listeners
+  // Reset timer on ANY navigation / route transition (e.g. logging in)
+  useEffect(() => {
+    resetActivity();
+  }, [location.pathname]);
+
+  // Global activity listeners (track user actions across login and protected routes)
+  useEffect(() => {
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart", "focus"];
+    const handleEvent = () => {
+      lastActivityRef.current = Date.now();
+      if (hasValidLocalSession("admin")) touchLocalSession("admin");
+      if (hasValidLocalSession("teacher")) touchLocalSession("teacher");
+      window.dispatchEvent(new Event("icademia:session-updated"));
+      if (showWarning) setShowWarning(false);
+    };
+
+    events.forEach((evt) => window.addEventListener(evt, handleEvent, { passive: true }));
+    window.addEventListener("icademia:session-activity", handleEvent);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, handleEvent));
+      window.removeEventListener("icademia:session-activity", handleEvent);
+    };
+  }, [showWarning]);
+
+  // Idle timeout checker (only active on protected paths)
   useEffect(() => {
     if (!isProtectedPath) return;
 
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-    const handleEvent = () => resetActivity();
-
-    events.forEach((evt) => window.addEventListener(evt, handleEvent, { passive: true }));
-
     const interval = setInterval(() => {
       const elapsed = Date.now() - lastActivityRef.current;
-      const remaining = IDLE_TIMEOUT_MS - elapsed;
+      const remaining = SESSION_IDLE_TIMEOUT_MS - elapsed;
 
       if (remaining <= 0) {
-        // Trigger Logout
+        // Trigger Logout only if actually authenticated on a protected route
         setShowWarning(false);
         if (location.pathname.startsWith("/teacher")) {
-          localStorage.removeItem("teacher_token");
-          localStorage.removeItem("teacher_profile");
-          navigate({ to: "/teacher-login" });
+          const hasToken = localStorage.getItem("teacher_token");
+          if (hasToken) {
+            clearTeacherSession();
+            window.dispatchEvent(new Event("icademia:session-updated"));
+            navigate({ to: "/teacher-login" });
+            toast.error("Session Expired Due to Inactivity", {
+              description: "For your security, you were automatically logged out after 15 minutes of inactivity.",
+            });
+          }
+        } else if (location.pathname.startsWith("/super-admin")) {
+          navigate({ to: "/super-admin" });
+          toast.error("Session Expired Due to Inactivity", {
+            description: "For your security, platform admin session was locked after 15 minutes of inactivity.",
+          });
         } else {
-          localStorage.removeItem("icademia_school_code");
-          navigate({ to: "/login" });
+          const hasToken = localStorage.getItem("icademia_admin_token");
+          if (hasToken) {
+            clearAdminSession();
+            window.dispatchEvent(new Event("icademia:session-updated"));
+            navigate({ to: "/login" });
+            toast.error("Session Expired Due to Inactivity", {
+              description: "For your security, you were automatically logged out after 15 minutes of inactivity.",
+            });
+          }
         }
-        toast.error("Session Expired Due to Inactivity", {
-          description: "For your security, you were automatically logged out after 15 minutes of inactivity.",
-        });
       } else if (remaining <= WARNING_THRESHOLD_MS) {
         setShowWarning(true);
         setSecondsLeft(Math.ceil(remaining / 1000));
@@ -61,7 +106,6 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     }, 1000);
 
     return () => {
-      events.forEach((evt) => window.removeEventListener(evt, handleEvent));
       clearInterval(interval);
     };
   }, [isProtectedPath, showWarning, location.pathname, navigate]);
@@ -95,10 +139,14 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
                 className="w-full text-xs"
                 onClick={() => {
                   if (location.pathname.startsWith("/teacher")) {
-                    localStorage.removeItem("teacher_token");
-                    localStorage.removeItem("teacher_profile");
+                    clearTeacherSession();
+                    window.dispatchEvent(new Event("icademia:session-updated"));
                     navigate({ to: "/teacher-login" });
+                  } else if (location.pathname.startsWith("/super-admin")) {
+                    navigate({ to: "/super-admin" });
                   } else {
+                    clearAdminSession();
+                    window.dispatchEvent(new Event("icademia:session-updated"));
                     navigate({ to: "/login" });
                   }
                 }}

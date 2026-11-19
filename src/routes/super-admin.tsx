@@ -11,6 +11,7 @@ import {
   Users,
   Eye,
   EyeOff,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,12 +28,15 @@ import {
 import {
   getSuperAdminOverviewDb,
   updateCardOrderFulfillmentDb,
+  confirmCardOrderTransferDb,
   savePortalContentDb,
   updateReferralStatusDb,
   saveCompetitionDb,
   saveConferenceDb,
 } from "@/lib/api/db.functions";
 import { Textarea } from "@/components/ui/textarea";
+import { SchoolInviteForm } from "@/components/school-invite-form";
+import { ResultImageImporter } from "@/components/result-image-importer";
 
 export const Route = createFileRoute("/super-admin")({
   head: () => ({ meta: [{ title: "Platform Administration — iCademia" }] }),
@@ -54,6 +58,7 @@ type PlatformOrder = {
   order_reference: string;
   order_type: string;
   quantity: number;
+  unit_price: number;
   status: string;
   fulfillment_status: string;
   school_name: string;
@@ -65,6 +70,8 @@ type PlatformSchool = {
   school_code: string;
   admin_email: string;
   city: string;
+  state?: string | null;
+  account_ready: boolean;
   students: number;
   teachers: number;
 };
@@ -106,6 +113,7 @@ function SuperAdminPage() {
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<number | null>(null);
   const [contentForm, setContentForm] = useState({
     contentType: "Announcement" as "Conference" | "Competition" | "Announcement" | "Wall of Fame",
     title: "",
@@ -120,6 +128,9 @@ function SuperAdminPage() {
     try {
       const result = await getSuperAdminOverviewDb({ data: { adminKey } });
       setOverview(result as unknown as Overview);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("icademia:session-activity"));
+      }
     } catch (error) {
       toast.error("Platform access denied", {
         description: error instanceof Error ? error.message : "Check your administrator key.",
@@ -139,6 +150,19 @@ function SuperAdminPage() {
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update order.");
+    }
+  };
+
+  const confirmTransfer = async (orderId: number) => {
+    setConfirmingOrderId(orderId);
+    try {
+      await confirmCardOrderTransferDb({ data: { adminKey, orderId } });
+      toast.success("Transfer confirmed and PINs issued");
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not confirm the transfer.");
+    } finally {
+      setConfirmingOrderId(null);
     }
   };
 
@@ -291,13 +315,20 @@ function SuperAdminPage() {
           />
           <Metric icon={LifeBuoy} label="Open tickets" value={overview.metrics.open_tickets} />
         </div>
+        <SchoolInviteForm adminKey={adminKey} onCreated={load} />
+        <ResultImageImporter
+          actor={{ kind: "platform", adminKey }}
+          schools={overview.schools.map((school) => ({ name: school.name, school_code: school.school_code }))}
+          onImported={load}
+        />
         <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <Card className="border-none p-6 shadow-sm ring-1 ring-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold tracking-tight">Scratch-card Orders</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  New orders appear here immediately after checkout creation.
+                  Confirm each transfer after matching its receipt. PINs are issued when you
+                  confirm.
                 </p>
               </div>
               <CreditCard className="h-5 w-5 text-primary" />
@@ -324,11 +355,43 @@ function SuperAdminPage() {
                       <td>
                         {Number(order.quantity).toLocaleString()}
                         <p className="text-xs text-muted-foreground">{order.order_type}</p>
+                        <p className="text-xs font-medium text-foreground">
+                          ₦{(order.quantity * order.unit_price).toLocaleString()}
+                        </p>
                       </td>
-                      <td>{order.status}</td>
+                      <td className="py-2">
+                        <div className="flex flex-col items-start gap-2">
+                          <span
+                            className={
+                              order.status === "Paid"
+                                ? "font-medium text-emerald-700"
+                                : "text-amber-700"
+                            }
+                          >
+                            {order.status === "Paid" ? "Transfer confirmed" : "Awaiting transfer"}
+                          </span>
+                          {order.status === "Pending" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={confirmingOrderId === Number(order.id)}
+                              onClick={() => void confirmTransfer(Number(order.id))}
+                              className="h-8 gap-1.5 text-xs"
+                            >
+                              {confirmingOrderId === Number(order.id) ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              )}
+                              Confirm received
+                            </Button>
+                          ) : null}
+                        </div>
+                      </td>
                       <td className="min-w-52 py-2">
                         <Select
                           value={order.fulfillment_status}
+                          disabled={order.status !== "Paid"}
                           onValueChange={(value) =>
                             void updateOrder(
                               Number(order.id),
@@ -369,13 +432,16 @@ function SuperAdminPage() {
                     <div>
                       <p className="text-sm font-semibold">{school.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {school.city} · {school.admin_email}
+                        {[school.city, school.state, school.admin_email].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                     <span className="font-mono text-[10px] text-primary">{school.school_code}</span>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {school.students} students · {school.teachers} teachers
+                  </p>
+                  <p className={`mt-1 text-xs font-medium ${school.account_ready ? "text-emerald-700" : "text-amber-700"}`}>
+                    {school.account_ready ? "Administrator account ready" : "Waiting for administrator password setup"}
                   </p>
                 </div>
               ))}

@@ -410,9 +410,18 @@
     border-radius: 0 !important;
   }
 
-  .result-sheet img {
-    max-height: 44pt !important;
-    max-width: 44pt !important;
+  .result-sheet .result-logo {
+    max-height: 54pt !important;
+    max-width: 54pt !important;
+  }
+
+  .result-sheet .result-signature {
+    max-height: 34pt !important;
+    max-width: 90pt !important;
+  }
+
+  .result-sheet .result-stamp {
+    max-height: 66pt !important;
+    max-width: 66pt !important;
   }
 }
-

@@ -4,9 +4,10 @@ import { createHash, randomBytes, scryptSync, randomUUID } from "node:crypto";
 import postgres from "postgres";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
-const envPath = path.join(projectRoot, ".env");
+const envPaths = [path.join(projectRoot, ".env.local"), path.join(projectRoot, ".env")];
 
-if (fs.existsSync(envPath)) {
+for (const envPath of envPaths) {
+  if (!fs.existsSync(envPath)) continue;
   for (const line of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
@@ -58,6 +59,8 @@ function caExam(score, wobble = 0) {
 const schools = [
   {
     code: "ICA-SCH-IMO-OWE",
+    registryId: "ICA-SCH-SDM-OWE",
+    staffPrefix: "SDM-OWE",
     referral: "ICA-REF-OWERRI26",
     name: "St. Dominic's Model Secondary School",
     type: "Secondary School",
@@ -74,6 +77,10 @@ const schools = [
     primaryColor: "#0B3B75",
     secondaryColor: "#F4C542",
     classes: ["JSS 2 Gold", "JSS 3 Emerald"],
+    classHeads: {
+      "JSS 2 Gold": "Civic Education",
+      "JSS 3 Emerald": "English Language",
+    },
     subjects: [
       ["English Language", "ENG", "Core"],
       ["Mathematics", "MTH", "Core"],
@@ -93,28 +100,28 @@ const schools = [
       [
         "Mr. Kelechi Iwu",
         "kelechi.iwu@stdominicsowerri.edu.ng",
-        "Subject Teacher",
+        "Teacher",
         "Mathematics",
         "JSS 2 Gold, JSS 3 Emerald",
       ],
       [
         "Mrs. Ngozi Iheanacho",
         "ngozi.iheanacho@stdominicsowerri.edu.ng",
-        "Subject Teacher",
+        "Teacher",
         "Basic Science",
         "JSS 2 Gold",
       ],
       [
         "Mr. Chima Ude",
         "chima.ude@stdominicsowerri.edu.ng",
-        "Exam Officer",
+        "Teacher",
         "Computer Studies",
         "JSS 2 Gold, JSS 3 Emerald",
       ],
       [
         "Miss Chioma Eke",
         "chioma.eke@stdominicsowerri.edu.ng",
-        "Form Teacher",
+        "Head Teacher",
         "Civic Education",
         "JSS 2 Gold",
       ],
@@ -224,6 +231,8 @@ const schools = [
   },
   {
     code: "ICA-SCH-IMO-ORL",
+    registryId: "ICA-SCH-HRI-ORL",
+    staffPrefix: "HRI-ORL",
     referral: "ICA-REF-ORLU26",
     name: "Holy Rosary International College",
     type: "Secondary School",
@@ -240,6 +249,10 @@ const schools = [
     primaryColor: "#5B174D",
     secondaryColor: "#F7C948",
     classes: ["SS 1 Pearl", "SS 2 Sapphire"],
+    classHeads: {
+      "SS 1 Pearl": "English Language",
+      "SS 2 Sapphire": "English Language",
+    },
     subjects: [
       ["English Language", "ENG", "Core"],
       ["Mathematics", "MTH", "Core"],
@@ -259,35 +272,35 @@ const schools = [
       [
         "Mr. Tochukwu Duru",
         "tochukwu.duru@holyrosaryorlu.sch.ng",
-        "Subject Teacher",
+        "Teacher",
         "Mathematics",
         "SS 1 Pearl, SS 2 Sapphire",
       ],
       [
         "Dr. Ifeoma Anozie",
         "ifeoma.anozie@holyrosaryorlu.sch.ng",
-        "Subject Teacher",
+        "Teacher",
         "Biology",
         "SS 2 Sapphire",
       ],
       [
         "Mrs. Ujunwa Onuoha",
         "ujunwa.onuoha@holyrosaryorlu.sch.ng",
-        "Subject Teacher",
+        "Teacher",
         "Chemistry",
         "SS 1 Pearl, SS 2 Sapphire",
       ],
       [
         "Mr. Emeka Nzeribe",
         "emeka.nzeribe@holyrosaryorlu.sch.ng",
-        "Exam Officer",
+        "Teacher",
         "Economics",
         "SS 1 Pearl, SS 2 Sapphire",
       ],
       [
         "Miss Chisom Opara",
         "chisom.opara@holyrosaryorlu.sch.ng",
-        "Form Teacher",
+        "Teacher",
         "Literature in English",
         "SS 1 Pearl",
       ],
@@ -402,6 +415,9 @@ async function deleteExistingDemoData(tx) {
     DELETE FROM schools
     WHERE school_code IN ${tx(schools.map((school) => school.code))}
        OR admin_email IN ${tx(schools.map((school) => school.adminEmail))}
+       OR registry_id IN ${tx(schools.map((school) => school.registryId))}
+       OR staff_code_prefix IN ${tx(schools.map((school) => school.staffPrefix))}
+       OR referral_code IN ${tx(schools.map((school) => school.referral))}
   `;
 }
 
@@ -410,15 +426,15 @@ async function insertSchool(tx, school, referredBySchoolId = null) {
     INSERT INTO schools (
       name, type, motto, city, admin_name, admin_email, admin_phone, address, website,
       admin_password_hash, student_count, school_code, logo_url, primary_color, secondary_color,
-      referral_code, referred_by_school_id, email_verified_at,
+      referral_code, referred_by_school_id, email_verified_at, registry_id, staff_code_prefix,
       signature_url, stamp_url, letterhead_style, contact_email, contact_phone, head_title
     ) VALUES (
       ${school.name}, ${school.type}, ${school.motto}, ${school.city}, ${school.adminName},
       ${school.adminEmail}, ${school.adminPhone}, ${school.address}, ${school.website},
       ${hashPassword(demoPassword)}, ${school.studentCount}, ${school.code}, ${school.logoUrl},
       ${school.primaryColor}, ${school.secondaryColor}, ${school.referral}, ${referredBySchoolId},
-      CURRENT_TIMESTAMP,
-      ${school.signatureUrl ?? null}, ${school.stampUrl ?? null}, ${school.letterheadStyle ?? 'classic'},
+      CURRENT_TIMESTAMP, ${school.registryId}, ${school.staffPrefix},
+      ${school.signatureUrl ?? null}, ${school.stampUrl ?? null}, ${school.letterheadStyle ?? "classic"},
       ${school.contactEmail ?? null}, ${school.contactPhone ?? null}, ${school.headTitle ?? null}
     )
     RETURNING id, school_code, referral_code
@@ -452,13 +468,23 @@ async function seedSchool(tx, school, schoolRow) {
       INSERT INTO teachers (
         school_id, staff_id, name, email, role, subject, assigned_classes, status
       ) VALUES (
-        ${schoolRow.id}, ${`ICA-TCH-${school.code.split("-").at(-1)}-${String(teacherIndex).padStart(3, "0")}`},
-        ${name}, ${email}, ${role}, ${subject}, ${classes}, 'Active'
+        ${schoolRow.id}, ${`ICA-${school.staffPrefix}-TCH-${String(teacherIndex).padStart(3, "0")}`},
+        ${name}, ${email}, ${role}, ${subject}, ${classes}, ${role === "Head Teacher" ? "Invited" : "Active"}
       )
       RETURNING id, name, subject
     `;
     teacherMap.set(subject, teacher.id);
     teacherIndex += 1;
+  }
+
+  for (const [className, subject] of Object.entries(school.classHeads ?? {})) {
+    const teacherId = teacherMap.get(subject);
+    if (!teacherId) continue;
+    await tx`
+      INSERT INTO class_head_teachers (school_id, class_name, teacher_id)
+      VALUES (${schoolRow.id}, ${className}, ${teacherId})
+      ON CONFLICT (school_id, class_name) DO UPDATE SET teacher_id = EXCLUDED.teacher_id
+    `;
   }
 
   const studentRows = [];
@@ -782,7 +808,7 @@ async function seedPinsAndOrders(tx, school, schoolRow, students) {
   for (const student of students) {
     const raw = randomBytes(6).toString("hex").toUpperCase();
     let pin = `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}`;
-    
+
     // Explicitly set deterministic PINs for the requested students so they can be easily tested
     if (student.registration_number === "SDM/J2G/025") pin = "A2B4-9X8C-Q7F1";
     if (student.registration_number === "SDM/J2G/026") pin = "C5P9-3M2K-L8N4";
@@ -826,20 +852,20 @@ async function main() {
     school.contactPhone = existing.contact_phone || school.contactPhone;
     school.headTitle = existing.head_title || school.headTitle;
   }
-    console.log("Removing previous demo rows for the two requested schools...");
-    await deleteExistingDemoData(sql);
-    console.log("Creating verified school workspaces...");
-    const first = await insertSchool(sql, schools[0]);
-    const second = await insertSchool(sql, schools[1], first.id);
-    await sql`
+  console.log("Removing previous demo rows for the two requested schools...");
+  await deleteExistingDemoData(sql);
+  console.log("Creating verified school workspaces...");
+  const first = await insertSchool(sql, schools[0]);
+  const second = await insertSchool(sql, schools[1], first.id);
+  await sql`
       INSERT INTO referrals (referrer_school_id, referred_school_id, referral_code, status, reward_per_student)
       VALUES (${first.id}, ${second.id}, ${schools[0].referral}, 'Qualified', 200)
     `;
-    console.log(`Seeding ${schools[0].name}...`);
-    await seedSchool(sql, schools[0], first);
-    console.log(`Seeding ${schools[1].name}...`);
-    await seedSchool(sql, schools[1], second);
-    summary.push(first, second);
+  console.log(`Seeding ${schools[0].name}...`);
+  await seedSchool(sql, schools[0], first);
+  console.log(`Seeding ${schools[1].name}...`);
+  await seedSchool(sql, schools[1], second);
+  summary.push(first, second);
   console.log("Verifying seeded record counts...");
 
   const rows = await sql`

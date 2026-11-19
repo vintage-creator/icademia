@@ -40,7 +40,7 @@ export const Route = createFileRoute("/developers")({
 });
 
 const widgetUrl =
-  "https://www.icademia.app/widget/result-checker?school=ICA-SCH-YOURCODE&colour=%233730A3";
+  "https://www.icademia.app/widget/result-checker?school=ICA-SCH-SDM-OWE&colour=%233730A3";
 
 const examples = [
   {
@@ -58,7 +58,7 @@ const examples = [
   {
     name: "React",
     code: `export function ResultChecker() {
-  const schoolCode = "ICA-SCH-YOURCODE";
+  const schoolCode = "ICA-SCH-SDM-OWE";
   const src = new URL("https://www.icademia.app/widget/result-checker");
   src.searchParams.set("school", schoolCode);
   src.searchParams.set("colour", "#3730A3");
@@ -156,11 +156,11 @@ const developerFaqs = [
   ],
   [
     "Can the widget match our school colours?",
-    "Yes. Pass a six-digit hex colour through the colour query parameter. The school name and verified branding are resolved from the supplied school code.",
+    "Yes. Pass a six-digit hex colour through the colour query parameter. The school name and verified branding are resolved from the supplied School Registry ID.",
   ],
   [
-    "Can another school use our school code?",
-    "A school code is an identifier, not a secret. Result access still requires the correct unique PIN and registration number. Production domain allowlisting adds another control for approved embeds.",
+    "Can another school use our Registry ID?",
+    "A School Registry ID uniquely identifies one institution but is not a secret. Result access still requires the correct unique PIN and registration number. Production domain allowlisting adds another control for approved embeds.",
   ],
   [
     "Will the widget work on phones?",
@@ -184,11 +184,11 @@ function DeveloperResources() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
-        <section className="relative overflow-hidden bg-[#07111f] text-white">
+        <section className="relative overflow-clip bg-[#07111f] text-white">
           <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
           <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 h-[500px] w-[500px] rounded-full bg-accent/20 blur-[120px] pointer-events-none" />
           <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:44px_44px] pointer-events-none" />
-          
+
           <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:items-center lg:py-24">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -205,11 +205,11 @@ function DeveloperResources() {
                 Students stay inside the school’s familiar website while iCademia securely handles
                 PIN verification, result retrieval and ongoing widget updates.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button
                   asChild
                   size="lg"
-                  className="bg-[#d6a84b] text-[#07111f] hover:bg-[#e3bc66] hover:scale-105 transition-transform"
+                  className="w-full bg-[#d6a84b] text-[#07111f] transition-transform hover:scale-105 hover:bg-[#e3bc66] sm:w-auto"
                 >
                   <a href="#quick-start">Start embedding</a>
                 </Button>
@@ -217,13 +217,13 @@ function DeveloperResources() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white hover:scale-105 transition-transform"
+                  className="w-full border-white/20 bg-white/5 text-white transition-transform hover:scale-105 hover:bg-white/10 hover:text-white sm:w-auto"
                 >
-                  <Link to="/register-school">Request a school code</Link>
+                  <Link to="/register-school">Request a School Registry ID</Link>
                 </Button>
               </div>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -236,7 +236,9 @@ function DeveloperResources() {
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
                   <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                  <span className="ml-3 font-mono text-[10px] text-white/35">yourschool.edu.ng/results</span>
+                  <span className="ml-3 font-mono text-[10px] text-white/35">
+                    yourschool.edu.ng/results
+                  </span>
                 </div>
                 <iframe
                   src="/widget/result-checker?school=ICA-SCH-PREVIEW&colour=%23D6A84B&compact=true"
@@ -256,30 +258,32 @@ function DeveloperResources() {
               [Globe2, "Framework neutral", "Works anywhere a secure iframe is allowed."],
               [TerminalSquare, "Maintained centrally", "Improvements arrive without code changes."],
             ].map(([Icon, title, body], i) => (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                key={title as string} 
+                key={title as string}
                 className="group rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/30 cursor-default"
               >
                 <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <h2 className="mt-4 font-display font-semibold transition-colors group-hover:text-primary">{title as string}</h2>
+                <h2 className="mt-4 font-display font-semibold transition-colors group-hover:text-primary">
+                  {title as string}
+                </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{body as string}</p>
               </motion.div>
             ))}
           </div>
         </section>
 
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          id="quick-start" 
+          id="quick-start"
           className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6"
         >
           <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
@@ -294,11 +298,14 @@ function DeveloperResources() {
                 {[
                   "Register and verify the school on iCademia.",
                   "Send us the production website domains for allowlisting.",
-                  "Copy the school code from the administrator dashboard.",
+                  "Copy the School Registry ID from the administrator dashboard.",
                   "Choose the school colour and paste the relevant example.",
                   "Test with an issued card before publishing the page.",
                 ].map((step, index) => (
-                  <li key={step} className="flex gap-3 text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground">
+                  <li
+                    key={step}
+                    className="flex gap-3 text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground"
+                  >
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
                       {index + 1}
                     </span>
@@ -320,7 +327,7 @@ function DeveloperResources() {
                     }`}
                   >
                     {selected === example.name && (
-                      <motion.div 
+                      <motion.div
                         layoutId="activeTab"
                         className="absolute inset-0 bg-primary rounded-lg -z-10 shadow-md"
                         initial={false}
@@ -336,7 +343,7 @@ function DeveloperResources() {
           </div>
         </motion.section>
 
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -360,7 +367,10 @@ function DeveloperResources() {
                   "Privacy-policy and student-data contact",
                   "Expected student volume and desired launch date",
                 ].map((item) => (
-                  <p key={item} className="flex gap-3 text-sm text-muted-foreground p-2 rounded-lg transition-colors hover:bg-primary/5 hover:text-foreground">
+                  <p
+                    key={item}
+                    className="flex gap-3 text-sm text-muted-foreground p-2 rounded-lg transition-colors hover:bg-primary/5 hover:text-foreground"
+                  >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {item}
                   </p>
                 ))}
@@ -388,7 +398,7 @@ function DeveloperResources() {
           </div>
         </motion.section>
 
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -399,12 +409,11 @@ function DeveloperResources() {
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
               Technical Reference
             </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold">
-              Widget Parameters API
-            </h2>
+            <h2 className="mt-3 font-display text-3xl font-semibold">Widget Parameters API</h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto leading-6">
-              The iCademia result checker widget is controlled entirely via URL query parameters passed to the iframe src.
-              No complex API keys or server-side tokens are required for standard integration.
+              The iCademia result checker widget is controlled entirely via URL query parameters
+              passed to the iframe src. No complex API keys or server-side tokens are required for
+              standard integration.
             </p>
           </div>
           <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -422,20 +431,41 @@ function DeveloperResources() {
                   <tr className="transition-colors hover:bg-muted/20">
                     <td className="px-6 py-4 font-mono text-primary font-medium">school</td>
                     <td className="px-6 py-4 font-mono text-xs">string</td>
-                    <td className="px-6 py-4"><span className="inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-destructive">Required</span></td>
-                    <td className="px-6 py-4 leading-relaxed">Your unique iCademia school code (e.g., <code>ICA-SCH-1234</code>). Determines the logo and school name displayed.</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-destructive">
+                        Required
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 leading-relaxed">
+                      Your unique School Registry ID (for example, <code>ICA-SCH-SDM-OWE</code>). It
+                      determines the logo and school name displayed.
+                    </td>
                   </tr>
                   <tr className="transition-colors hover:bg-muted/20">
                     <td className="px-6 py-4 font-mono text-primary font-medium">colour</td>
                     <td className="px-6 py-4 font-mono text-xs">hex string</td>
-                    <td className="px-6 py-4"><span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Optional</span></td>
-                    <td className="px-6 py-4 leading-relaxed">A six-digit hex color code (e.g., <code>%233730A3</code>). Overrides the default brand color for the widget's primary buttons and accents.</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                        Optional
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 leading-relaxed">
+                      A six-digit hex color code (e.g., <code>%233730A3</code>). Overrides the
+                      default brand color for the widget's primary buttons and accents.
+                    </td>
                   </tr>
                   <tr className="transition-colors hover:bg-muted/20">
                     <td className="px-6 py-4 font-mono text-primary font-medium">compact</td>
                     <td className="px-6 py-4 font-mono text-xs">boolean</td>
-                    <td className="px-6 py-4"><span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Optional</span></td>
-                    <td className="px-6 py-4 leading-relaxed">Set to <code>true</code> to render a tighter vertical UI layout. Ideal for mobile or highly constrained website containers.</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                        Optional
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 leading-relaxed">
+                      Set to <code>true</code> to render a tighter vertical UI layout. Ideal for
+                      mobile or highly constrained website containers.
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -443,7 +473,7 @@ function DeveloperResources() {
           </div>
         </motion.section>
 
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -465,7 +495,9 @@ function DeveloperResources() {
           >
             {developerFaqs.map(([question, answer], index) => (
               <AccordionItem key={question} value={`developer-${index}`}>
-                <AccordionTrigger className="text-left font-medium hover:text-primary transition-colors">{question}</AccordionTrigger>
+                <AccordionTrigger className="text-left font-medium hover:text-primary transition-colors">
+                  {question}
+                </AccordionTrigger>
                 <AccordionContent className="leading-6 text-muted-foreground">
                   {answer}
                 </AccordionContent>
@@ -475,12 +507,18 @@ function DeveloperResources() {
           <Card className="relative mt-10 flex flex-col items-start justify-between gap-5 border-primary/20 bg-primary/5 p-7 sm:flex-row sm:items-center overflow-hidden hover:bg-primary/10 transition-colors">
             <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
             <div className="relative z-10">
-              <p className="font-display text-xl font-semibold text-foreground">Need a reviewed integration?</p>
+              <p className="font-display text-xl font-semibold text-foreground">
+                Need a reviewed integration?
+              </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Send your domain, school code and technology stack to the iCademia integration team.
+                Send your domain, School Registry ID and technology stack to the iCademia
+                integration team.
               </p>
             </div>
-            <Button asChild className="relative z-10 shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all">
+            <Button
+              asChild
+              className="relative z-10 w-full shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-primary/25 sm:w-auto"
+            >
               <a href="mailto:support@icademia.app?subject=iCademia%20widget%20integration">
                 Contact integrations <ExternalLink className="ml-2 h-4 w-4" />
               </a>

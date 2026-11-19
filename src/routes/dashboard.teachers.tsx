@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { UserPlus, Copy, Search, Mail, ShieldCheck, Loader2, Pencil, Trash2, Send } from "lucide-react";
+import {
+  UserPlus,
+  Copy,
+  Search,
+  Mail,
+  ShieldCheck,
+  Loader2,
+  Pencil,
+  Trash2,
+  Send,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,7 +39,7 @@ import {
   updateTeacherDb,
   resendTeacherInviteDb,
 } from "@/lib/api/db.functions";
-import { getSchoolCode } from "@/lib/utils";
+import { getAdminToken, getSchoolCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/teachers")({
   head: () => ({ meta: [{ title: "Teachers — iCademia" }] }),
@@ -41,9 +51,10 @@ type Teacher = {
   staff_id: string;
   name: string;
   email: string;
-  role: "Head Teacher" | "Form Teacher" | "Subject Teacher" | "Exam Officer";
+  role: "Teacher" | "Head Teacher";
   subject: string;
   assigned_classes: string;
+  headed_classes?: string;
   status: string;
   password_hash: string | null;
 };
@@ -55,7 +66,7 @@ function TeachersPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
+
   // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
@@ -67,21 +78,15 @@ function TeachersPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    role: "Form Teacher" as Teacher["role"],
+    role: "Teacher" as "Teacher" | "Head Teacher",
     subject: "",
     classes: "",
     status: "Invited" as "Invited" | "Active" | "Suspended",
   });
-const schoolCode = getSchoolCode();
-  const roleGuidance: Record<Teacher["role"], string> = {
-    "Head Teacher": "Oversees teaching quality and class activity. Does not need a subject unless they also teach one.",
-    "Form Teacher": "Owns one class roster, attendance and parent-facing remarks. Assign the class they lead.",
-    "Subject Teacher": "Enters scores only for their assigned subject and classes. Assign both subject and classes.",
-    "Exam Officer": "Coordinates exam records and result readiness. Use this for the staff member responsible for assessment administration.",
-  };
+  const schoolCode = getSchoolCode();
 
   const loadTeachers = () =>
-    getTeachersDb({ data: { schoolCode } })
+    getTeachersDb({ data: { token: getAdminToken(), schoolCode } })
       .then((rows) => setTeachers(rows as unknown as Teacher[]))
       .catch((error) =>
         toast.error(error instanceof Error ? error.message : "Could not load staff."),
@@ -101,10 +106,11 @@ const schoolCode = getSchoolCode();
     setSaving(true);
     try {
       const teacher = editingId
-        ? await updateTeacherDb({ data: { schoolCode, id: editingId, ...form } })
+        ? await updateTeacherDb({ data: { token: getAdminToken(), schoolCode, id: editingId, ...form } })
         : await addTeacherDb({
             data: {
               schoolCode,
+              token: getAdminToken(),
               name: form.name,
               email: form.email,
               role: form.role,
@@ -117,19 +123,23 @@ const schoolCode = getSchoolCode();
       setForm({
         name: "",
         email: "",
-        role: "Form Teacher",
+        role: "Teacher",
         subject: "",
         classes: "",
-        status: "Invited",
+        status: "Active",
       });
-      toast.success(editingId ? `${teacher.name} updated` : `${teacher.name} invited`, {
+      toast.success(editingId ? `${teacher.name} updated` : `${teacher.name} added`, {
         description: editingId
-          ? "The teacher profile and responsibility assignment were saved."
-          : `Staff ID ${teacher.staff_id} created and the email invite was queued.`,
+          ? teacher.role === "Head Teacher"
+            ? "Profile saved. Head Teacher workspace access is enabled."
+            : "Profile saved without Head Teacher workspace access."
+          : teacher.role === "Head Teacher"
+            ? `Staff ID ${teacher.staff_id} created and the workspace invite was queued.`
+            : `Staff ID ${teacher.staff_id} created for timetable and academic allocation.`,
       });
       await loadTeachers();
     } catch (error) {
-      toast.error("Could not invite staff", {
+      toast.error("Could not save teacher", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
@@ -159,7 +169,7 @@ const schoolCode = getSchoolCode();
     if (!teacherToDelete) return;
     setDeleting(true);
     try {
-      await deleteTeacherDb({ data: { schoolCode, id: teacherToDelete.id } });
+      await deleteTeacherDb({ data: { token: getAdminToken(), schoolCode, id: teacherToDelete.id } });
       toast.success("Teacher removed");
       setDeleteOpen(false);
       setTeacherToDelete(null);
@@ -174,7 +184,7 @@ const schoolCode = getSchoolCode();
   const resendInvite = async (teacher: Teacher) => {
     setResendingId(teacher.id);
     try {
-      await resendTeacherInviteDb({ data: { schoolCode, id: teacher.id } });
+      await resendTeacherInviteDb({ data: { token: getAdminToken(), schoolCode, id: teacher.id } });
       toast.success(`Invite sent to ${teacher.name}`);
     } catch (e) {
       toast.error("Failed to send invite.");
@@ -189,12 +199,13 @@ const schoolCode = getSchoolCode();
   };
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-4 sm:p-6 md:p-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Teachers & Staff</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Teachers & Access</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Invite staff and assign roles. Each staff member receives a unique Staff ID for secure login.
+            Keep every teacher available for timetable and subject allocation. Grant the Head
+            Teacher workspace only to staff who need academic portal access.
           </p>
         </div>
         <Dialog
@@ -215,7 +226,7 @@ const schoolCode = getSchoolCode();
               <DialogDescription>
                 {editingId
                   ? "Update identity, teaching responsibilities and account status."
-                  : "iCademia will generate a unique staff ID and send the invite by email."}
+                  : "Add an ordinary teacher record or explicitly grant Head Teacher access."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={addTeacher} className="mt-2 grid gap-4 sm:grid-cols-2">
@@ -229,7 +240,7 @@ const schoolCode = getSchoolCode();
                   placeholder="Mary Bello"
                 />
               </div>
-              {editingId ? (
+              {editingId && form.role === "Head Teacher" ? (
                 <div className="sm:col-span-2">
                   <Label>Account status</Label>
                   <Select
@@ -263,23 +274,30 @@ const schoolCode = getSchoolCode();
                   placeholder="mary@yourschool.edu"
                 />
               </div>
-              <div>
-                <Label>Role</Label>
+              <div className="sm:col-span-2">
+                <Label>Staff type & workspace access</Label>
                 <Select
                   value={form.role}
-                  onValueChange={(v) => setForm({ ...form, role: v as Teacher["role"] })}
+                  onValueChange={(role) =>
+                    setForm({
+                      ...form,
+                      role: role as "Teacher" | "Head Teacher",
+                      status: role === "Head Teacher" ? "Invited" : "Active",
+                    })
+                  }
                 >
                   <SelectTrigger className="mt-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Head Teacher">Head Teacher</SelectItem>
-                    <SelectItem value="Form Teacher">Form Teacher</SelectItem>
-                    <SelectItem value="Subject Teacher">Subject Teacher</SelectItem>
-                    <SelectItem value="Exam Officer">Exam Officer</SelectItem>
+                    <SelectItem value="Teacher">Teacher — no portal access</SelectItem>
+                    <SelectItem value="Head Teacher">Head Teacher — academic workspace</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">{roleGuidance[form.role]}</p>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  You can promote a Teacher later. Removing Head Teacher access signs the person out
+                  immediately.
+                </p>
               </div>
               <div>
                 <Label>Subject</Label>
@@ -291,13 +309,17 @@ const schoolCode = getSchoolCode();
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label>Classes</Label>
+                <Label>Teaching classes</Label>
                 <Input
                   value={form.classes}
                   onChange={(e) => setForm({ ...form, classes: e.target.value })}
                   className="mt-2"
                   placeholder="JSS 1 – 3"
                 />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  These are teaching responsibilities. Assign the one accountable class Head Teacher
+                  from Academic Setup → Classes.
+                </p>
               </div>
               <DialogFooter className="sm:col-span-2">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -309,7 +331,11 @@ const schoolCode = getSchoolCode();
                   className="gradient-primary text-primary-foreground shadow-elegant"
                 >
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingId ? "Save teacher changes" : "Generate staff ID & invite"}
+                  {editingId
+                    ? "Save teacher changes"
+                    : form.role === "Head Teacher"
+                      ? "Add & invite Head Teacher"
+                      : "Add teacher"}
                 </Button>
               </DialogFooter>
             </form>
@@ -321,14 +347,29 @@ const schoolCode = getSchoolCode();
             <DialogHeader>
               <DialogTitle>Remove Teacher?</DialogTitle>
               <DialogDescription>
-                Are you sure you want to remove <strong>{teacherToDelete?.name}</strong>? This will revoke their access to the teacher portal.
+                Are you sure you want to remove <strong>{teacherToDelete?.name}</strong>? This will
+                remove their timetable and academic responsibility record
+                {teacherToDelete?.role === "Head Teacher"
+                  ? " and revoke their Head Teacher access immediately."
+                  : "."}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleting}
+              >
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={removeTeacher} disabled={deleting} className="gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={removeTeacher}
+                disabled={deleting}
+                className="gap-2"
+              >
                 {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {deleting ? "Removing..." : "Remove Teacher"}
               </Button>
@@ -344,46 +385,32 @@ const schoolCode = getSchoolCode();
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">How Staff Roles & Access Work</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Staff records and workspace access are separate
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed max-w-2xl">
-                Assigning the right role ensures staff only see what they need to see. Teachers sign in with their unique <span className="font-mono text-foreground font-semibold">Staff ID</span> at <span className="font-mono text-primary font-medium">icademia.app/teacher-login</span>.
+                Ordinary Teachers appear in timetable, class and subject allocation only. They
+                cannot activate or sign in to the Head Teacher dashboard. The School Admin must
+                explicitly promote a person before iCademia grants workspace access.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 border-t border-border/60 pt-4">
-          <div className="rounded-lg border border-border/50 bg-card p-3">
-            <span className="inline-block rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
-              Head Teacher
-            </span>
-            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
-              Academic oversight & remarks across all classes. Signs official result cards.
-            </p>
-          </div>
-          <div className="rounded-lg border border-border/50 bg-card p-3">
-            <span className="inline-block rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
-              Form Teacher
-            </span>
-            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
-              Manages a single class roster, registers attendance & writes tutor remarks.
-            </p>
-          </div>
-          <div className="rounded-lg border border-border/50 bg-card p-3">
-            <span className="inline-block rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
-              Subject Teacher
-            </span>
-            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
-              Only enters CA & exam scores for their specific assigned subjects and classes.
-            </p>
-          </div>
-          <div className="rounded-lg border border-border/50 bg-card p-3">
-            <span className="inline-block rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
-              Exam Officer
-            </span>
-            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
-              Audits score readiness, compiles rankings & publishes final term results.
-            </p>
+        <div className="mt-4 border-t border-border/60 pt-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-border/50 bg-card p-3">
+              <span className="text-xs font-bold">Teacher</span>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Available for timetable, subjects and teaching responsibility. No dashboard login.
+              </p>
+            </div>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <span className="text-xs font-bold text-primary">Head Teacher</span>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Can sign in and work only with classes assigned by the School Admin.
+              </p>
+            </div>
           </div>
         </div>
       </Card>
@@ -404,13 +431,13 @@ const schoolCode = getSchoolCode();
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : (
-            <table className="w-full min-w-[600px] text-sm">
+            <table className="hidden w-full min-w-[700px] text-sm md:table">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
                   <th className="py-3">Teacher</th>
                   <th className="py-3">Staff ID</th>
-                  <th className="py-3">Role</th>
-                  <th className="py-3">Subject · Classes</th>
+                  <th className="py-3">Workspace access</th>
+                  <th className="py-3">Academic responsibility</th>
                   <th className="py-3">Status</th>
                   <th className="py-3 text-right" />
                 </tr>
@@ -445,15 +472,34 @@ const schoolCode = getSchoolCode();
                         <Copy className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
                       </button>
                     </td>
-                    <td className="py-3">{t.role}</td>
-                    <td className="py-3 text-muted-foreground">
-                      {t.subject || "—"} · {t.assigned_classes || "Not assigned"}
+                    <td className="py-3">
+                      <span
+                        className={
+                          t.role === "Head Teacher"
+                            ? "font-semibold text-primary"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {t.role === "Head Teacher" ? "Head Teacher portal" : "No portal access"}
+                      </span>
                     </td>
-                  <td className="py-3">
-                      <StatusPill status={t.status} hasPassword={!!t.password_hash} />
+                    <td className="py-3 text-muted-foreground">
+                      <p>
+                        {t.subject || "No subject"} · {t.assigned_classes || "No teaching classes"}
+                      </p>
+                      <p className="mt-1 text-[11px] font-semibold text-primary">
+                        {t.role === "Head Teacher" && t.headed_classes
+                          ? `Class Head Teacher: ${t.headed_classes}`
+                          : t.role === "Head Teacher"
+                            ? "Portal access granted · no class-head responsibility"
+                            : "Teaching staff record"}
+                      </p>
+                    </td>
+                    <td className="py-3">
+                      <StatusPill role={t.role} status={t.status} hasPassword={!!t.password_hash} />
                     </td>
                     <td className="py-3 text-right">
-                      {t.status === "Invited" && (
+                      {t.role === "Head Teacher" && t.status === "Invited" && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -461,7 +507,11 @@ const schoolCode = getSchoolCode();
                           onClick={() => resendInvite(t)}
                           disabled={resendingId === t.id}
                         >
-                          {resendingId === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          {resendingId === t.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </Button>
                       )}
                       <Button
@@ -487,7 +537,7 @@ const schoolCode = getSchoolCode();
                 {teachers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                      No teachers added yet. Click "Add teacher" to invite your staff.
+                      No teachers added yet. Use “Add teacher” to create your staff list.
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
@@ -501,11 +551,57 @@ const schoolCode = getSchoolCode();
             </table>
           )}
         </div>
+        {!loading && (
+          <div className="mt-4 grid gap-3 md:hidden">
+            {filtered.map((t) => (
+              <div key={t.id} className="rounded-xl border p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.email}</p>
+                  </div>
+                  <StatusPill role={t.role} status={t.status} hasPassword={!!t.password_hash} />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {t.subject || "All subjects"} · {t.assigned_classes || "No teaching classes"}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-primary">
+                  {t.role === "Head Teacher" && t.headed_classes
+                    ? `Class Head Teacher: ${t.headed_classes}`
+                    : t.role === "Head Teacher"
+                      ? "Portal access granted · no class-head responsibility"
+                      : "Teacher · no portal access"}
+                </p>
+                <div className="mt-3 flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => editTeacher(t)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => requestRemoveTeacher(t)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );
 }
-function StatusPill({ status, hasPassword }: { status: string; hasPassword: boolean }) {
+function StatusPill({
+  role,
+  status,
+  hasPassword,
+}: {
+  role: Teacher["role"];
+  status: string;
+  hasPassword: boolean;
+}) {
   const map: Record<string, string> = {
     Active: "bg-success/15 text-success",
     Invited: "bg-accent/25 text-accent-foreground",
@@ -516,9 +612,9 @@ function StatusPill({ status, hasPassword }: { status: string; hasPassword: bool
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? "bg-muted"}`}
       >
-        {status}
+        {role === "Teacher" && status !== "Suspended" ? "Active staff" : status}
       </span>
-      {status !== "Suspended" && (
+      {role === "Head Teacher" && status !== "Suspended" && (
         <span className="text-[10px] text-muted-foreground">
           {hasPassword ? "✓ Password set" : "Awaiting setup"}
         </span>

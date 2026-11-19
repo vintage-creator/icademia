@@ -7,62 +7,55 @@ import {
   KeyRound,
   Settings,
   LogOut,
-  BookOpen,
   UserCog,
   X,
-  BrainCircuit,
-  BookMarked,
-  Gift,
-  LifeBuoy,
   CalendarDays,
-  ClipboardList,
-  Bell,
+  MessagesSquare,
+  BookOpen,
+  BookMarked,
+  Sparkles,
 } from "lucide-react";
-import { cn, getSchoolCode } from "@/lib/utils";
+import { clearAdminSession, cn, getSchoolCode } from "@/lib/utils";
 import { toast } from "sonner";
-import { getSchoolProfileDb } from "@/lib/api/db.functions";
+import { getSchoolProfileDb, logoutSchoolAdminDb } from "@/lib/api/db.functions";
 const logoDark = "/icademia-logo-white.png";
 
 // Standard SaaS Navigation Groups
 const navGroups = [
   {
-    category: "Main Workspace",
-    items: [
-      { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
-      { to: "/dashboard/results", label: "Upload Results", icon: Upload },
-      { to: "/dashboard/records", label: "Academic Records", icon: ClipboardList },
-      { to: "/dashboard/notifications", label: "Notifications & Audit", icon: Bell },
-    ],
+    category: "Workspace",
+    items: [{ to: "/dashboard", label: "Overview", icon: LayoutDashboard }],
   },
   {
     category: "People & School",
     items: [
       { to: "/dashboard/students", label: "Students", icon: Users },
-      { to: "/dashboard/teachers", label: "Teachers", icon: UserCog },
+      { to: "/dashboard/teachers", label: "Teachers & Access", icon: UserCog },
     ],
   },
   {
-    category: "Academic Structure",
+    category: "Communication",
+    items: [{ to: "/dashboard/communication", label: "Communication", icon: MessagesSquare }],
+  },
+  {
+    category: "Academics",
     items: [
-      { to: "/dashboard/classes", label: "Classes & Terms", icon: BookOpen },
+      { to: "/dashboard/results", label: "Results & Reports", icon: Upload },
+      { to: "/dashboard/classes", label: "Classes", icon: BookOpen },
       { to: "/dashboard/subjects", label: "Subjects", icon: BookMarked },
       { to: "/dashboard/timetable", label: "Timetable", icon: CalendarDays },
     ],
   },
   {
-    category: "Operations & Intelligence",
+    category: "Operations",
     items: [
-      { to: "/dashboard/ai", label: "AI Operations Brief", icon: BrainCircuit },
-      { to: "/dashboard/pins", label: "Order Scratch Cards", icon: KeyRound },
+      { to: "/dashboard/pins", label: "Scratch Cards", icon: KeyRound },
+      { to: "/dashboard/ai", label: "AI Guidance", icon: Sparkles },
     ],
   },
   {
-    category: "System Preferences",
-    items: [
-      { to: "/dashboard/referrals", label: "Referrals", icon: Gift },
-      { to: "/dashboard/support", label: "Support", icon: LifeBuoy },
-      { to: "/dashboard/settings", label: "Settings", icon: Settings },
-    ],
+    category: "School",
+    items: [{ to: "/dashboard/settings", label: "School Settings", icon: Settings }],
   },
 ];
 
@@ -71,6 +64,7 @@ type SchoolProfile = {
   admin_name?: string | null;
   admin_email?: string | null;
   email_verified_at?: string | Date | null;
+  registry_id?: string | null;
 };
 
 function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
@@ -102,7 +96,9 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
           setLoading(false);
           try {
             localStorage.setItem(`icademia_profile_${schoolCode}`, JSON.stringify(fresh));
-          } catch (e) {}
+          } catch {
+            // The fresh profile remains available in memory when browser storage is unavailable.
+          }
         }
       })
       .catch(() => {
@@ -117,22 +113,16 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   const initials = useMemo(() => {
     if (!adminName) return "";
     const parts = adminName.split(/\s+/).filter(Boolean).slice(0, 2);
-    return (
-      parts
-        .map((part) => part[0])
-        .join("")
-        .toUpperCase()
-    );
+    return parts
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
   }, [adminName]);
 
   return (
     <>
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <Link
-          to="/"
-          onClick={onNavigate}
-          className="shrink-0 transition-opacity hover:opacity-85"
-        >
+        <Link to="/" onClick={onNavigate} className="shrink-0 transition-opacity hover:opacity-85">
           <img src={logoDark} alt="iCademia" width={28} height={28} className="h-7 w-7" />
         </Link>
         <div className="min-w-0">
@@ -145,7 +135,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
           <Link
             to="/registry"
-            search={{ code: schoolCode }}
+            search={{ code: profile?.registry_id || schoolCode }}
             target="_blank"
             rel="noreferrer"
             className="truncate text-[11px] text-sidebar-primary hover:underline font-semibold block max-w-[140px]"
@@ -177,7 +167,9 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
                 >
                   <it.icon className="h-4 w-4 shrink-0" />
                   <span>{it.label}</span>
-                  {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-sidebar-primary" />}
+                  {active && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-sidebar-primary" />
+                  )}
                 </Link>
               );
             })}
@@ -185,6 +177,23 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
       <div className="border-t border-sidebar-border p-3">
+        <div className="mb-2 flex items-center gap-3 px-3 text-[11px] font-medium text-sidebar-foreground/60">
+          <Link
+            to="/dashboard/support"
+            onClick={onNavigate}
+            className="hover:text-sidebar-foreground"
+          >
+            Support
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link
+            to="/dashboard/referrals"
+            onClick={onNavigate}
+            className="hover:text-sidebar-foreground"
+          >
+            Referrals
+          </Link>
+        </div>
         {loading ? (
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sidebar-accent/70 animate-pulse" />
@@ -199,7 +208,9 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
               {initials || "A"}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{profile?.admin_name || "Administrator"}</p>
+              <p className="truncate text-sm font-medium">
+                {profile?.admin_name || "Administrator"}
+              </p>
               <p className="truncate text-[11px] text-sidebar-foreground/60">
                 {profile?.email_verified_at ? "Verified administrator" : "Administrator"}
               </p>
@@ -207,9 +218,14 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
             <button
               onClick={() => {
                 onNavigate?.();
-                localStorage.removeItem("icademia_school_code");
+                const token = localStorage.getItem("icademia_admin_token");
+                if (token) void logoutSchoolAdminDb({ data: { token } });
+                clearAdminSession();
+                window.dispatchEvent(new Event("icademia:session-updated"));
                 navigate({ to: "/login" });
-                toast.success("Signed out", { description: "Your session has been securely ended." });
+                toast.success("Signed out", {
+                  description: "Your session has been securely ended.",
+                });
               }}
               className="text-sidebar-foreground/60 hover:text-sidebar-foreground cursor-pointer"
               title="Sign Out"

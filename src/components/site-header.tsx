@@ -3,16 +3,13 @@ import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn, hasValidLocalSession } from "@/lib/utils";
 const logo = "/icademia-logo.png";
 
 const nav = [
   { to: "/", label: "Home" },
-  { to: "/registry", label: "School Registry" },
-  { to: "/wall-of-fame", label: "Wall of Fame" },
-  { to: "/competitions", label: "Competitions" },
-  { to: "/conferences", label: "Conferences" },
-  { to: "/developers", label: "Developers" },
+  { to: "/register-school", label: "For Schools" },
+  { to: "/registry", label: "Registry" },
   { to: "/check-result", label: "Check Result" },
 ];
 
@@ -23,10 +20,19 @@ export function SiteHeader() {
   const [hasTeacherSession, setHasTeacherSession] = useState(false);
 
   useEffect(() => {
-    const code = localStorage.getItem("icademia_school_code");
-    const tkn = localStorage.getItem("teacher_token");
-    setHasSchoolSession(!!code && code.length >= 4);
-    setHasTeacherSession(!!tkn);
+    const syncSessionState = () => {
+      setHasSchoolSession(hasValidLocalSession("admin"));
+      setHasTeacherSession(hasValidLocalSession("teacher"));
+    };
+
+    syncSessionState();
+    window.addEventListener("icademia:session-updated", syncSessionState);
+    window.addEventListener("storage", syncSessionState);
+
+    return () => {
+      window.removeEventListener("icademia:session-updated", syncSessionState);
+      window.removeEventListener("storage", syncSessionState);
+    };
   }, []);
 
   return (
@@ -54,12 +60,20 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           {hasSchoolSession ? (
-            <Button asChild size="sm" className="hidden sm:inline-flex gradient-primary text-primary-foreground shadow-elegant">
+            <Button
+              asChild
+              size="sm"
+              className="hidden sm:inline-flex gradient-primary text-primary-foreground shadow-elegant"
+            >
               <Link to="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : hasTeacherSession ? (
-            <Button asChild size="sm" className="hidden sm:inline-flex gradient-primary text-primary-foreground shadow-elegant">
-              <Link to="/teacher">Teacher Portal</Link>
+            <Button
+              asChild
+              size="sm"
+              className="hidden sm:inline-flex gradient-primary text-primary-foreground shadow-elegant"
+            >
+              <Link to="/teacher">Head Teacher</Link>
             </Button>
           ) : (
             <>
@@ -71,7 +85,7 @@ export function SiteHeader() {
                 size="sm"
                 className="hidden sm:inline-flex gradient-primary text-primary-foreground shadow-elegant"
               >
-                <Link to="/register-school">Get scratch cards</Link>
+                <Link to="/register-school">Register school</Link>
               </Button>
             </>
           )}
@@ -96,7 +110,9 @@ export function SiteHeader() {
                     onClick={() => setOpen(false)}
                     className={cn(
                       "rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted",
-                      path === n.to ? "bg-muted font-semibold text-foreground" : "text-muted-foreground",
+                      path === n.to
+                        ? "bg-muted font-semibold text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     {n.label}
@@ -112,7 +128,7 @@ export function SiteHeader() {
                   ) : hasTeacherSession ? (
                     <Link to="/teacher" onClick={() => setOpen(false)}>
                       <Button className="w-full justify-start text-xs gradient-primary text-primary-foreground shadow-sm">
-                        Go to Teacher Portal
+                        Go to Head Teacher Workspace
                       </Button>
                     </Link>
                   ) : (
@@ -124,7 +140,7 @@ export function SiteHeader() {
                       </Link>
                       <Link to="/register-school" onClick={() => setOpen(false)}>
                         <Button className="w-full justify-start text-xs gradient-primary text-primary-foreground shadow-sm">
-                          Get Scratch Cards
+                          Register School
                         </Button>
                       </Link>
                     </>

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import {
   Download,
   KeyRound,
-  CreditCard,
   ShieldCheck,
   Loader2,
   PackageCheck,
@@ -17,7 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PIN_PRICE_NGN, PIN_REPLACEMENT_PRICE_NGN } from "@/lib/mock-data";
 import { StatusPill } from "./dashboard.index";
-import { buildWhatsAppEscalationUrl } from "@/lib/whatsapp";
+import {
+  buildTransferDetailsRequestUrl,
+  buildTransferProofUrl,
+  buildWhatsAppEscalationUrl,
+  WHATSAPP_SUPPORT_DISPLAY_NUMBER,
+} from "@/lib/whatsapp";
 import {
   Select,
   SelectContent,
@@ -25,10 +29,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { createScratchCardCheckout } from "@/lib/api/nomba.functions";
-import { getCardOrderContextDb, getPinsDb, updatePinAccessDb } from "@/lib/api/db.functions";
-import { getSchoolCode } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  createTransferCardOrderDb,
+  getCardOrderContextDb,
+  getPinsDb,
+  updatePinAccessDb,
+} from "@/lib/api/db.functions";
+import { getAdminToken, getSchoolCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/pins")({
   head: () => ({ meta: [{ title: "PIN Cards — iCademia" }] }),
@@ -69,7 +83,6 @@ function PinsPage() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [orders, setOrders] = useState<CardOrder[]>([]);
   const [paying, setPaying] = useState(false);
-  const [gatewayMaintenanceOpen, setGatewayMaintenanceOpen] = useState(false);
 
   // Result access restrictions states
   const [restrictingPin, setRestrictingPin] = useState<Pin | null>(null);
@@ -82,7 +95,7 @@ function PinsPage() {
   const fetchPins = async () => {
     setLoading(true);
     try {
-      const list = await getPinsDb({ data: { schoolCode } });
+      const list = await getPinsDb({ data: { token: getAdminToken(), schoolCode } });
       setPins(list as unknown as Pin[]);
     } catch (error) {
       console.error("Error fetching PINs:", error);
@@ -93,11 +106,12 @@ function PinsPage() {
 
   useEffect(() => {
     void fetchPins();
-    void getCardOrderContextDb({ data: { schoolCode } }).then((context) => {
+    void getCardOrderContextDb({ data: { token: getAdminToken(), schoolCode } }).then((context) => {
       setSchoolName(context.schoolName ?? "");
       setEmail(context.adminEmail ?? "");
       setEnrolledStudents(context.enrolledStudents);
       setCount(context.enrolledStudents || 1);
+      setDeliveryAddress(context.deliveryAddress ?? "");
       setOrders(context.orders as unknown as CardOrder[]);
     });
     // fetchPins is local to this page and intentionally refreshed when the active school changes.
@@ -117,6 +131,7 @@ function PinsPage() {
     try {
       await updatePinAccessDb({
         data: {
+          token: getAdminToken(),
           schoolCode,
           pinId: restrictingPin.id,
           status: restrictStatus,
@@ -137,30 +152,48 @@ function PinsPage() {
 
   const orderCards = async () => {
     setPaying(true);
+    const chatWindow = window.open("about:blank", "_blank");
     try {
-      const checkout = await createScratchCardCheckout({
+      const order = await createTransferCardOrderDb({
         data: {
+          token: getAdminToken(),
+          schoolCode,
           quantity: kind === "annual" ? enrolledStudents : count,
           kind,
-          customerEmail: email,
-          schoolName,
-          schoolCode,
           deliveryAddress,
         },
       });
-      if (checkout.checkoutLink) {
-        window.location.assign(checkout.checkoutLink);
+      const whatsappUrl = buildTransferDetailsRequestUrl({
+        schoolName: order.schoolName,
+        orderRef: order.orderReference,
+        amountNgn: order.amountNgn,
+        kind: kind === "annual" ? "annual scratch cards" : "replacement scratch cards",
+        quantity: order.quantity,
+        contactEmail: order.customerEmail,
+      });
+      if (chatWindow) {
+        chatWindow.opener = null;
+        chatWindow.location.href = whatsappUrl;
       } else {
-        toast.error("Checkout link missing");
+        window.location.assign(whatsappUrl);
       }
-    } catch (error) {
-      if (error instanceof Error && error.message === "PAYMENT_GATEWAY_MAINTENANCE") {
-        setGatewayMaintenanceOpen(true);
-      } else {
-        toast.error("Checkout could not start", {
-          description: error instanceof Error ? error.message : "Please try again.",
+      try {
+        const context = await getCardOrderContextDb({
+          data: { token: getAdminToken(), schoolCode },
         });
+        setOrders(context.orders as unknown as CardOrder[]);
+      } catch {
+        // Keep the saved order and WhatsApp request available if refreshing the order list fails.
       }
+      toast.success("Order request prepared", {
+        description:
+          "WhatsApp is ready with the order details. The team will send transfer instructions.",
+      });
+    } catch (error) {
+      chatWindow?.close();
+      toast.error("Could not prepare the order", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
     } finally {
       setPaying(false);
     }
@@ -192,14 +225,19 @@ function PinsPage() {
   const total = pins.length;
   const used = pins.filter((p) => p.status === "Used").length;
   const unused = pins.filter((p) => p.status === "Unused").length;
-  const orderBlockedReason =
-    kind === "annual" && enrolledStudents < 1
-      ? "Add enrolled students before ordering the annual school batch."
-      : !email
-        ? "Add a valid billing email."
-        : deliveryAddress.trim().length < 10
-          ? "Enter the complete school delivery address."
-          : null;
+  const orderQuantity = kind === "annual" ? enrolledStudents : count;
+  const orderTotal =
+    (kind === "annual" ? PIN_PRICE_NGN : PIN_REPLACEMENT_PRICE_NGN) * orderQuantity;
+  let orderBlockedReason: string | null = null;
+  if (orderQuantity > 500) {
+    orderBlockedReason = "Orders above 500 cards need assisted fulfilment.";
+  } else if (kind === "annual" && enrolledStudents < 1) {
+    orderBlockedReason = "Add enrolled students before ordering the annual school batch.";
+  } else if (orderQuantity < 1) {
+    orderBlockedReason = "Enter at least one card.";
+  } else if (deliveryAddress.trim().length < 10) {
+    orderBlockedReason = "Enter the complete school delivery address.";
+  }
 
   return (
     <div className="space-y-6 p-8">
@@ -226,11 +264,12 @@ function PinsPage() {
           <div>
             <h2 className="font-display text-lg font-semibold">Order scratch cards</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Pay securely and track production and delivery from this page.
+              Request the verified transfer account details from iCademia on WhatsApp, then send
+              your receipt there.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-            <ShieldCheck className="h-3.5 w-3.5" /> Secure payment
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <MessageCircle className="h-3.5 w-3.5" /> WhatsApp · {WHATSAPP_SUPPORT_DISPLAY_NUMBER}
           </span>
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-6">
@@ -265,17 +304,7 @@ function PinsPage() {
               {kind === "annual" ? "Matches current enrolment" : "Number being replaced"}
             </p>
           </div>
-          <div>
-            <Label htmlFor="billing-email">Billing email</Label>
-            <Input
-              id="billing-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-2"
-            />
-          </div>
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <Label htmlFor="delivery-address">School delivery address</Label>
             <Input
               id="delivery-address"
@@ -285,57 +314,56 @@ function PinsPage() {
               className="mt-2"
             />
           </div>
-          <div className="md:col-span-6 flex items-end">
+          <div className="md:col-span-6 flex flex-col gap-3 rounded-xl bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Amount to transfer</p>
+              <p className="mt-0.5 font-display text-2xl font-semibold">
+                ₦{orderTotal.toLocaleString()}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {orderQuantity.toLocaleString()} card{orderQuantity === 1 ? "" : "s"}
+              </p>
+            </div>
             <Button
               onClick={orderCards}
               disabled={
                 paying || Boolean(orderBlockedReason) || (kind === "replacement" && count < 1)
               }
-              className="gradient-primary text-primary-foreground shadow-elegant w-full md:w-auto"
+              className="gradient-primary text-primary-foreground shadow-elegant w-full sm:w-auto"
             >
-              <CreditCard className="mr-1 h-4 w-4" />{" "}
-              {paying
-                ? "Opening secure checkout…"
-                : `Pay ₦${((kind === "annual" ? PIN_PRICE_NGN : PIN_REPLACEMENT_PRICE_NGN) * (kind === "annual" ? enrolledStudents : count)).toLocaleString()}`}
+              <MessageCircle className="mr-1 h-4 w-4" />{" "}
+              {paying ? "Preparing WhatsApp request…" : "Request transfer details on WhatsApp"}
             </Button>
             {orderBlockedReason ? (
-              <p className="mt-2 text-xs font-medium text-amber-700 md:ml-4 md:mt-0">
-                {orderBlockedReason}
-              </p>
+              <div className="text-xs">
+                <p className="font-medium text-amber-700">{orderBlockedReason}</p>
+                {orderQuantity > 500 ? (
+                  <a
+                    href={buildWhatsAppEscalationUrl({
+                      schoolName,
+                      amountNgn: orderTotal,
+                      kind: kind === "annual" ? "Annual Scratch Cards" : "Replacement Cards",
+                      contactEmail: email,
+                      reason: "Please arrange assisted fulfilment for an order over 500 cards.",
+                    })}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block font-semibold text-emerald-700 hover:underline"
+                  >
+                    Arrange this order on WhatsApp
+                  </a>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          Annual orders are calculated from the {enrolledStudents.toLocaleString()} students
-          currently enrolled in iCademia. Unique school-scoped PINs are generated only after payment
-          is confirmed. Each physical card carries your partner-school name and logo, and the batch
-          is delivered in 5–12 working days.
+          {kind === "annual"
+            ? `Annual orders include all ${enrolledStudents.toLocaleString()} students currently enrolled.`
+            : "Replacement orders are counted by the quantity entered above."}{" "}
+          Transfer account details are shared privately by the iCademia team. PINs are issued after
+          the transfer is confirmed; branded cards are prepared for delivery in 5–12 working days.
         </p>
-
-        {/* WhatsApp Payment Escalation Banner */}
-        <div className="mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
-            <MessageCircle className="h-4 w-4 shrink-0 text-emerald-600" />
-            <span>
-              <strong>Payment Gateway Issue?</strong> If your bank card failed or you encountered an error, escalate your order directly to our team via WhatsApp for instant manual processing.
-            </span>
-          </div>
-          <a
-            href={buildWhatsAppEscalationUrl({
-              schoolName,
-              amountNgn: (kind === "annual" ? PIN_PRICE_NGN : PIN_REPLACEMENT_PRICE_NGN) * (kind === "annual" ? enrolledStudents : count),
-              kind: kind === "annual" ? "Annual Scratch Cards" : "Replacement Cards",
-              contactEmail: email,
-            })}
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 w-full sm:w-auto"
-          >
-            <Button size="sm" variant="outline" className="w-full sm:w-auto border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white text-xs gap-1.5 font-semibold">
-              <MessageCircle className="h-3.5 w-3.5" /> Escalate Order via WhatsApp
-            </Button>
-          </a>
-        </div>
       </Card>
 
       <Card className="border-border p-6 shadow-card">
@@ -362,6 +390,26 @@ function PinsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {order.delivery_address || "Delivery address awaiting confirmation"}
                   </p>
+                  {order.status !== "Paid" ? (
+                    <a
+                      href={buildTransferProofUrl({
+                        schoolName,
+                        orderRef: order.order_reference,
+                        amountNgn: order.quantity * order.unit_price,
+                        kind:
+                          order.order_type === "annual"
+                            ? "annual scratch cards"
+                            : "replacement scratch cards",
+                        quantity: order.quantity,
+                        contactEmail: email,
+                      })}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> Send transfer proof on WhatsApp
+                    </a>
+                  ) : null}
                 </div>
                 <div className="text-sm md:text-right">
                   <StatusPill status={order.status} />
@@ -394,7 +442,8 @@ function PinsPage() {
               <KeyRound className="h-8 w-8 text-muted-foreground/40" />
               <p className="text-sm">No PIN cards issued yet.</p>
               <p className="text-xs max-w-xs text-muted-foreground/70">
-                Complete a verified secure checkout to issue your first card batch.
+                Send a transfer request on WhatsApp. PINs are issued here after iCademia confirms
+                payment.
               </p>
             </div>
           ) : (
@@ -449,89 +498,6 @@ function PinsPage() {
         </div>
       </Card>
 
-      {/* Manual Payment Information Modal */}
-      <Dialog open={gatewayMaintenanceOpen} onOpenChange={setGatewayMaintenanceOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-              <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                <MessageCircle className="h-4 w-4" />
-              </span>
-              <span>Manual Order & Bank Transfer</span>
-            </DialogTitle>
-            <DialogDescription className="text-xs pt-1 leading-relaxed">
-              Our automated checkout gateway is currently undergoing scheduled maintenance. You can complete your order instantly via direct bank transfer and coordinate manual delivery processing with our team.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 my-2 text-xs">
-            {/* Order breakdown */}
-            <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-              <p className="font-semibold text-foreground">Order Details</p>
-              <div className="flex justify-between text-muted-foreground">
-                <span>School Name:</span>
-                <span className="font-semibold text-foreground">{schoolName}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Order Type:</span>
-                <span className="font-semibold text-foreground uppercase">{kind} Cards</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Quantity:</span>
-                <span className="font-semibold text-foreground font-mono">{kind === "annual" ? enrolledStudents : count}</span>
-              </div>
-              <div className="border-t border-border/60 my-2 pt-2 flex justify-between font-bold text-sm text-foreground">
-                <span>Total Amount:</span>
-                <span className="text-primary font-mono">₦{((kind === "annual" ? PIN_PRICE_NGN : PIN_REPLACEMENT_PRICE_NGN) * (kind === "annual" ? enrolledStudents : count)).toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Bank details */}
-            <div className="rounded-xl border-2 border-emerald-500/20 bg-emerald-500/5 p-4 space-y-2">
-              <p className="font-semibold text-emerald-800 dark:text-emerald-300">Verified Corporate Account</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Bank Name:</span>
-                  <span className="font-bold text-foreground">Nomba Microfinance Bank</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Account Name:</span>
-                  <span className="font-bold text-foreground">iCademia Technologies Limited</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Account Number:</span>
-                  <span className="font-bold text-foreground font-mono tracking-wider text-emerald-700 dark:text-emerald-300">1019283746</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-muted-foreground italic mt-2">
-                *Please make payments using your School Name as reference.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 pt-2">
-            <a
-              href={buildWhatsAppEscalationUrl({
-                schoolName,
-                amountNgn: (kind === "annual" ? PIN_PRICE_NGN : PIN_REPLACEMENT_PRICE_NGN) * (kind === "annual" ? enrolledStudents : count),
-                kind: kind === "annual" ? "Annual Scratch Cards" : "Replacement Cards",
-                contactEmail: email,
-                reason: "Payment Gateway Maintenance (Manual Transfer Mode)",
-              })}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full"
-            >
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 shadow-sm">
-                <MessageCircle className="h-4 w-4" /> Send Proof of Payment on WhatsApp
-              </Button>
-            </a>
-            <Button variant="ghost" size="sm" onClick={() => setGatewayMaintenanceOpen(false)} className="text-xs w-full">
-              Close Instructions
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
       {/* Result Access Control Dialog */}
       <Dialog open={Boolean(restrictingPin)} onOpenChange={(open) => !open && setRestrictingPin(null)}>
         <DialogContent className="max-w-md">

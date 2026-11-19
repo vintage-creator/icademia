@@ -28,12 +28,12 @@ export function AdminIntelligenceVisual() {
       <div className="relative flex items-center justify-between border-b border-white/10 pb-4">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d6a84b]">
-            Live academic intelligence
+            Example academic brief
           </p>
           <p className="mt-1 font-display text-lg font-semibold">Principal’s morning brief</p>
         </div>
         <span className="flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-300">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" /> Analysing
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Illustrative preview
         </span>
       </div>
 

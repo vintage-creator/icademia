@@ -120,3 +120,52 @@ export function SchoolReasonsCarousel() {
     </section>
   );
 }
+
+export function SchoolReasonsVisual() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(
+      () => setActive((current) => (current + 1) % reasons.length),
+      4800,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="relative min-h-[29rem] overflow-hidden rounded-3xl bg-[#07111f] shadow-elegant">
+      {reasons.map((reason, index) => (
+        <img
+          key={reason.number}
+          src={reason.image}
+          alt={reason.label}
+          className={`absolute inset-0 h-full w-full object-cover transition duration-1000 ${
+            active === index ? "scale-100 opacity-100" : "scale-105 opacity-0"
+          }`}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#07111f] via-[#07111f]/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f5d996]">
+          Why schools choose iCademia
+        </p>
+        <p className="mt-2 max-w-sm font-display text-xl font-semibold">{reasons[active].label}</p>
+        <div className="mt-4 flex gap-2" aria-label="School benefits">
+          {reasons.map((reason, index) => (
+            <button
+              key={reason.number}
+              type="button"
+              aria-label={`Show ${reason.label}`}
+              aria-current={active === index ? "true" : undefined}
+              onClick={() => setActive(index)}
+              className={`h-1.5 rounded-full transition-all ${
+                active === index ? "w-8 bg-[#d6a84b]" : "w-4 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

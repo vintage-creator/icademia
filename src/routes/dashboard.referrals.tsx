@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, Copy, Gift, Loader2, School, WalletCards, Link as LinkIcon, Share2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Gift,
+  Loader2,
+  School,
+  WalletCards,
+  Link as LinkIcon,
+  Share2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -100,13 +109,18 @@ function ReferralsPage() {
                   onClick={() => void copyCode()}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-xs text-white/80 transition-colors hover:bg-white/20"
                 >
-                  {copiedCode ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedCode ? (
+                    <Check className="h-3.5 w-3.5 text-success" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
                   {copiedCode ? "Code Copied" : "Copy Code"}
                 </button>
               )}
             </div>
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/60">
-              Share your direct signup link with school administrators. When they register using your link, your referral ID is automatically applied and tracked.
+              Share your direct signup link with school administrators. When they register using
+              your link, your referral ID is automatically applied and tracked.
             </p>
             {referralCode && (
               <p className="mt-2 font-mono text-xs text-[#d6a84b]/90 truncate max-w-xl bg-white/5 px-3 py-2 rounded-lg border border-white/10">
@@ -142,35 +156,66 @@ function ReferralsPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[600px] text-sm">
-              <thead>
-                <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="py-3">School</th>
-                  <th>Students</th>
-                  <th>Status</th>
-                  <th className="text-right">Tracked reward</th>
-                </tr>
-              </thead>
-              <tbody>
-                {referrals.map((referral) => (
-                  <tr key={referral.id} className="border-b border-border/60">
-                    <td className="py-3">
-                      <p className="font-medium">{referral.school_name}</p>
-                      <p className="font-mono text-xs text-muted-foreground">
+          <>
+            <div className="mt-4 hidden overflow-x-auto sm:block">
+              <table className="w-full min-w-[600px] text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <th className="py-3">School</th>
+                    <th>Students</th>
+                    <th>Status</th>
+                    <th className="text-right">Tracked reward</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {referrals.map((referral) => (
+                    <tr key={referral.id} className="border-b border-border/60">
+                      <td className="py-3">
+                        <p className="font-medium">{referral.school_name}</p>
+                        <p className="font-mono text-xs text-muted-foreground">
+                          {referral.school_code}
+                        </p>
+                      </td>
+                      <td>{referral.enrolled_students}</td>
+                      <td>{referral.paid_at ? "Paid" : referral.status}</td>
+                      <td className="text-right font-semibold">
+                        ₦{Number(referral.estimated_reward).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 grid gap-3 sm:hidden">
+              {referrals.map((referral) => (
+                <article key={referral.id} className="rounded-xl border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{referral.school_name}</p>
+                      <p className="font-mono text-[11px] text-muted-foreground">
                         {referral.school_code}
                       </p>
-                    </td>
-                    <td>{referral.enrolled_students}</td>
-                    <td>{referral.paid_at ? "Paid" : referral.status}</td>
-                    <td className="text-right font-semibold">
-                      ₦{Number(referral.estimated_reward).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+                      {referral.paid_at ? "Paid" : referral.status}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 border-t pt-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Students</p>
+                      <p className="mt-1 font-semibold">{referral.enrolled_students}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-foreground">Tracked reward</p>
+                      <p className="mt-1 font-semibold">
+                        ₦{Number(referral.estimated_reward).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
         )}
       </Card>
     </div>

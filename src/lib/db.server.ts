@@ -7,10 +7,12 @@ if (!databaseUrl) {
 
 export const sql = postgres(databaseUrl, {
   ssl: { rejectUnauthorized: false }, // Render DBs require SSL
+  connect_timeout: 10,
+  idle_timeout: 20,
   onnotice: () => {}, // Suppress "relation already exists" notices
 });
 
-const DB_SCHEMA_VERSION = "v10"; // bump this whenever you add new ALTER TABLE statements
+const DB_SCHEMA_VERSION = "v18"; // bump this whenever you add new ALTER TABLE statements
 const globalForDb = globalThis as unknown as { __db_version: string };
 
 export async function initDb() {
@@ -26,6 +28,7 @@ export async function initDb() {
         type TEXT NOT NULL,
         motto TEXT,
         city TEXT NOT NULL,
+        state TEXT,
         admin_name TEXT NOT NULL,
         admin_email TEXT NOT NULL UNIQUE,
         admin_phone TEXT,
@@ -49,9 +52,23 @@ export async function initDb() {
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS admin_password_hash TEXT`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS address TEXT`;
+    await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS state TEXT`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS website TEXT`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS referred_by_school_id INTEGER REFERENCES schools(id) ON DELETE SET NULL`;
+    await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS registry_id TEXT`;
+    await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS staff_code_prefix TEXT`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS schools_registry_id_unique ON schools (registry_id) WHERE registry_id IS NOT NULL`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS schools_staff_code_prefix_unique ON schools (staff_code_prefix) WHERE staff_code_prefix IS NOT NULL`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS school_admin_sessions (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
     // Signing authority, handwritten signature & school stamp
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_title TEXT`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS signature_url TEXT`;
@@ -66,7 +83,7 @@ export async function initDb() {
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS font_weight TEXT DEFAULT '600'`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS font_size_scale TEXT DEFAULT 'M'`;
     await sql`ALTER TABLE schools ADD COLUMN IF NOT EXISTS header_text_color TEXT DEFAULT 'auto'`;
-    
+
     await sql`
       UPDATE schools
       SET referral_code = 'ICA-REF-' || UPPER(SUBSTRING(MD5(id::text || school_code), 1, 8))
@@ -87,6 +104,16 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS password_reset_tokens (
         id SERIAL PRIMARY KEY,
         school_id INTEGER REFERENCES schools(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS school_admin_invites (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
         token_hash TEXT NOT NULL UNIQUE,
         expires_at TIMESTAMP NOT NULL,
         used_at TIMESTAMP,
@@ -133,6 +160,17 @@ export async function initDb() {
     await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS photo_url TEXT`;
     await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS gender TEXT`;
     await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS responsibilities TEXT`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS result_access_status TEXT NOT NULL DEFAULT 'Allowed'`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS result_restriction_reason TEXT`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS result_restricted_at TIMESTAMP`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS result_restricted_by TEXT`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS result_restriction_expires_at TIMESTAMP`;
+    await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS public_identity TEXT UNIQUE`;
+    await sql`
+      UPDATE students
+      SET public_identity = 'ICA-STU-' || UPPER(SUBSTRING(MD5(id::text || registration_number), 1, 10))
+      WHERE public_identity IS NULL
+    `;
 
     await sql`
       CREATE TABLE IF NOT EXISTS teachers (
@@ -154,6 +192,28 @@ export async function initDb() {
     // Teacher auth migrations for existing DBs
     await sql`ALTER TABLE teachers ADD COLUMN IF NOT EXISTS password_hash TEXT`;
     await sql`ALTER TABLE teachers ADD COLUMN IF NOT EXISTS last_login TIMESTAMP`;
+    // Staff may be ordinary Teachers (internal academic records only) or Head
+    // Teachers (explicit academic-workspace access). Never infer portal access
+    // from a timetable or subject assignment.
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS class_head_teachers (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        class_name TEXT NOT NULL,
+        teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (school_id, class_name)
+      )
+    `;
+    await sql`
+      INSERT INTO class_head_teachers (school_id, class_name, teacher_id)
+      SELECT t.school_id, TRIM(class_name), MIN(t.id)
+      FROM teachers t, UNNEST(STRING_TO_ARRAY(COALESCE(t.assigned_classes, ''), ',')) class_name
+      WHERE TRIM(class_name) <> ''
+      GROUP BY t.school_id, TRIM(class_name)
+      ON CONFLICT (school_id, class_name) DO NOTHING
+    `;
 
     // Teacher sessions — secure token-based session management
     await sql`
@@ -162,6 +222,14 @@ export async function initDb() {
         teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
         token_hash TEXT NOT NULL UNIQUE,
         expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS teacher_staff_id_aliases (
+        id SERIAL PRIMARY KEY,
+        teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+        staff_id TEXT NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -180,6 +248,18 @@ export async function initDb() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS result_import_batches (
+        id TEXT PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        class_name TEXT NOT NULL,
+        term TEXT NOT NULL,
+        session TEXT NOT NULL,
+        created_by TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS import_batch_id TEXT REFERENCES result_import_batches(id) ON DELETE SET NULL`;
 
     // 4. Create grades table
     await sql`
@@ -203,6 +283,12 @@ export async function initDb() {
     await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS affective_traits JSONB`;
     await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS psychomotor_skills JSONB`;
     await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS principal_remarks TEXT`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS workflow_status TEXT NOT NULL DEFAULT 'Published'`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS review_note TEXT`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS submitted_by INTEGER REFERENCES teachers(id) ON DELETE SET NULL`;
+    await sql`ALTER TABLE results ADD COLUMN IF NOT EXISTS waived_subjects JSONB DEFAULT '[]'::jsonb`;
 
     // 5. Create pins table
     await sql`
@@ -295,6 +381,17 @@ export async function initDb() {
         status TEXT NOT NULL DEFAULT 'Active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE (school_id, name)
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS class_subjects (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        class_name TEXT NOT NULL,
+        subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (school_id, class_name, subject_id)
       )
     `;
 
@@ -560,6 +657,50 @@ export async function initDb() {
         receiver_id INTEGER NOT NULL,
         message_body TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS assignments (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+        class_name TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        title TEXT NOT NULL,
+        instructions TEXT NOT NULL,
+        due_date DATE NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS student_quiz_attempts (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        result_id INTEGER NOT NULL REFERENCES results(id) ON DELETE CASCADE,
+        attempt_token_hash TEXT NOT NULL UNIQUE,
+        subject_focus TEXT NOT NULL,
+        questions JSONB NOT NULL,
+        submitted_answers JSONB,
+        score INTEGER,
+        completed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS school_announcements (
+        id SERIAL PRIMARY KEY,
+        school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        priority TEXT NOT NULL DEFAULT 'Normal',
+        audience TEXT NOT NULL DEFAULT 'Head Teachers',
+        published_by TEXT,
+        expires_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;

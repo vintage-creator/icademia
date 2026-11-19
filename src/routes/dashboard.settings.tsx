@@ -149,9 +149,9 @@ function SettingsPage() {
 
   // Stamp canvas
   const stampCanvasRef   = useRef<HTMLCanvasElement>(null);
-  const [inkColor,       setInkColor]       = useState("#1a3a8f");
-  const [stampShape,     setStampShape]     = useState<"circle" | "oval" | "rectangle">("circle");
-  const [stampSubText,   setStampSubText]   = useState("OFFICIAL STAMP");
+  const [inkColor,       setInkColor]       = useState("#1a3680");
+  const [stampShape,     setStampShape]     = useState<"circle" | "oval" | "rectangle" | "rosette">("circle");
+  const [stampSubText,   setStampSubText]   = useState("OFFICIAL SEAL");
   const [stampRendered,  setStampRendered]  = useState(false);
   const [stampGenerating, setStampGenerating] = useState(false);
   const [showLivePreviewModal, setShowLivePreviewModal] = useState(false);
@@ -526,15 +526,25 @@ function SettingsPage() {
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <header>
         <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-          School identity
+          Administration
         </p>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-          Branding &amp; result-sheet design
+          School Settings
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Logo, colours, signing authority, handwritten signature and official stamp — all applied to every printed result sheet.
+          Manage the school profile, professional result-sheet identity and less frequent governance records.
         </p>
       </header>
+
+      <Card className="border-primary/15 bg-primary/5 p-4 shadow-none">
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">Jump to a section</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <a href="#school-profile" className="rounded-lg border bg-background px-3 py-2 text-sm font-semibold hover:border-primary/40">School profile</a>
+          <a href="#report-design" className="rounded-lg border bg-background px-3 py-2 text-sm font-semibold hover:border-primary/40">Report design</a>
+          <a href="#signing-authority" className="rounded-lg border bg-background px-3 py-2 text-sm font-semibold hover:border-primary/40">Signature &amp; stamp</a>
+          <a href="#governance" className="rounded-lg border bg-background px-3 py-2 text-sm font-semibold hover:border-primary/40">Advanced governance</a>
+        </div>
+      </Card>
 
       {loading ? (
         <Card className="grid min-h-64 place-items-center">
@@ -547,7 +557,7 @@ function SettingsPage() {
           <div className="space-y-5">
 
             {/* School profile */}
-            <Card className="overflow-hidden border-border shadow-card">
+            <Card id="school-profile" className="scroll-mt-20 overflow-hidden border-border shadow-card">
               <SectionHeader label="Organisation" title="School profile"
                 description="These details appear on official reports and partner-school records." />
               <div className="grid gap-4 p-5 sm:grid-cols-2">
@@ -563,6 +573,7 @@ function SettingsPage() {
                     title="School type is set during onboarding.">
                     <option value="primary">Primary school</option>
                     <option value="secondary">Secondary school</option>
+                    <option value="both">Primary & secondary school</option>
                     <option value="college">College / tertiary institution</option>
                   </select>
                 </div>
@@ -617,7 +628,7 @@ function SettingsPage() {
             </Card>
 
             {/* Branding */}
-            <Card className="overflow-hidden border-border shadow-card">
+            <Card id="report-design" className="scroll-mt-20 overflow-hidden border-border shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-5 py-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-primary">Result-sheet branding</p>
@@ -975,7 +986,7 @@ function SettingsPage() {
             </Card>
 
             {/* Signing authority & signature */}
-            <Card className="overflow-hidden border-border shadow-card">
+            <Card id="signing-authority" className="scroll-mt-20 overflow-hidden border-border shadow-card">
               <SectionHeader label="Official signature" title="Signing authority & signature"
                 description='Name and signature appear at the bottom of every printed result sheet. Primary schools default to “Head Teacher”; secondary schools to “Principal”.' />
               <div className="space-y-5 p-5">
@@ -1066,7 +1077,7 @@ function SettingsPage() {
             </Card>
 
             {/* ══ STAFF TRANSITION / HANDOVER ═══════════════════════════════════════ */}
-            <Card className="overflow-hidden border-border shadow-card">
+            <Card id="governance" className="scroll-mt-20 overflow-hidden border-border shadow-card">
               <SectionHeader label="Staff transition" title="Administrator handover & audit trail"
                 description="Safely transfer administrator access when the Principal or Head Teacher changes. The outgoing signature is cleared; the new administrator must sign afresh. Every handover is permanently logged." />
               <div className="p-5 space-y-4">
@@ -1550,57 +1561,83 @@ function SettingsPage() {
                   <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
                     The oval seal is the most prestigious choice for schools. Round is the most familiar. Rectangular is best when your school already uses a box-style stamp.
                   </p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {([
                       {
-                        key: "oval",
-                        label: "Oval Seal",
-                        badge: "Most Popular",
-                        desc: "Prestigious elliptical — elegant and widely used",
+                        key: "circle",
+                        label: "Royal Round Seal",
+                        badge: "Standard",
+                        desc: "Classic double-ring seal with beaded security border & heraldic crest",
                         preview: (
-                          <svg viewBox="0 0 80 64" className="w-full h-14">
-                            <ellipse cx="40" cy="32" rx="37" ry="28" fill="none" stroke={inkColor} strokeWidth="3" />
-                            <ellipse cx="40" cy="32" rx="30" ry="22" fill="none" stroke={inkColor} strokeWidth="1" />
-                            <ellipse cx="40" cy="32" rx="28" ry="20" fill="none" stroke={inkColor} strokeWidth="0.5" />
-                            <text x="40" y="28" textAnchor="middle" fontSize="7" fontWeight="900" fill={inkColor} fontFamily="Arial">SCHOOL NAME</text>
-                            <line x1="26" y1="33" x2="54" y2="33" stroke={inkColor} strokeWidth="0.5" />
-                            <text x="40" y="40" textAnchor="middle" fontSize="5.5" fontWeight="700" fill={inkColor} fontFamily="Arial" letterSpacing="1.5">OFFICIAL</text>
-                            <text x="40" y="52" textAnchor="middle" fontSize="5.5" fontWeight="700" fill={inkColor} fontFamily="Arial">CITY</text>
+                          <svg viewBox="0 0 64 64" className="w-full h-16">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke={inkColor} strokeWidth="2.5" />
+                            <circle cx="32" cy="32" r="26" fill="none" stroke={inkColor} strokeWidth="0.8" strokeDasharray="1 1.5" />
+                            <circle cx="32" cy="32" r="24" fill="none" stroke={inkColor} strokeWidth="1" />
+                            <circle cx="32" cy="32" r="16" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <text x="32" y="14" textAnchor="middle" fontSize="4.2" fontWeight="900" fill={inkColor} fontFamily="serif">SCHOOL NAME</text>
+                            {/* Shield icon */}
+                            <path d="M28 26 L36 26 L36 32 Q36 36 32 38 Q28 36 28 32 Z" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <rect x="23" y="40" width="18" height="4" fill="none" stroke={inkColor} strokeWidth="0.6" />
+                            <text x="32" y="43" textAnchor="middle" fontSize="3" fontWeight="900" fill={inkColor} fontFamily="sans-serif">OFFICIAL</text>
+                            <text x="32" y="53" textAnchor="middle" fontSize="3.5" fontWeight="700" fill={inkColor} fontFamily="serif">LOCATION · EST</text>
                           </svg>
                         ),
                       },
                       {
-                        key: "circle",
-                        label: "Round Stamp",
-                        badge: null,
-                        desc: "Classic circular seal — formal and universally recognised",
+                        key: "oval",
+                        label: "Executive Oval Seal",
+                        badge: "Prestigious",
+                        desc: "Elliptical institutional seal with dual beaded rings & heraldic arms",
                         preview: (
-                          <svg viewBox="0 0 64 64" className="w-full h-14">
-                            <circle cx="32" cy="32" r="29" fill="none" stroke={inkColor} strokeWidth="3" />
-                            <circle cx="32" cy="32" r="23" fill="none" stroke={inkColor} strokeWidth="1" />
-                            <circle cx="32" cy="32" r="21" fill="none" stroke={inkColor} strokeWidth="0.5" />
-                            <text x="32" y="28" textAnchor="middle" fontSize="6" fontWeight="900" fill={inkColor} fontFamily="Arial">SCHOOL</text>
-                            <line x1="20" y1="33" x2="44" y2="33" stroke={inkColor} strokeWidth="0.5" />
-                            <text x="32" y="39" textAnchor="middle" fontSize="4.5" fontWeight="700" fill={inkColor} fontFamily="Arial" letterSpacing="1">OFFICIAL</text>
-                            <text x="32" y="54" textAnchor="middle" fontSize="5" fontWeight="700" fill={inkColor} fontFamily="Arial">CITY</text>
+                          <svg viewBox="0 0 80 64" className="w-full h-16">
+                            <ellipse cx="40" cy="32" rx="38" ry="28" fill="none" stroke={inkColor} strokeWidth="2.5" />
+                            <ellipse cx="40" cy="32" rx="34" ry="24" fill="none" stroke={inkColor} strokeWidth="0.8" strokeDasharray="1 1.5" />
+                            <ellipse cx="40" cy="32" rx="31" ry="22" fill="none" stroke={inkColor} strokeWidth="1" />
+                            <ellipse cx="40" cy="32" rx="20" ry="14" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <text x="40" y="16" textAnchor="middle" fontSize="4.5" fontWeight="900" fill={inkColor} fontFamily="serif">SCHOOL NAME</text>
+                            <path d="M36 27 L44 27 L44 32 Q44 35 40 37 Q36 35 36 32 Z" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <rect x="30" y="39" width="20" height="4" fill="none" stroke={inkColor} strokeWidth="0.6" />
+                            <text x="40" y="42" textAnchor="middle" fontSize="3" fontWeight="900" fill={inkColor} fontFamily="sans-serif">OFFICIAL SEAL</text>
+                            <text x="40" y="52" textAnchor="middle" fontSize="3.8" fontWeight="700" fill={inkColor} fontFamily="serif">EXAMS & RECORDS</text>
                           </svg>
                         ),
                       },
                       {
                         key: "rectangle",
-                        label: "Box Stamp",
-                        badge: null,
-                        desc: "Best when your school already uses a rectangular stamp",
+                        label: "Examinations Box",
+                        badge: "Verified",
+                        desc: "Official rectangular certification stamp with date & signature lines",
                         preview: (
-                          <svg viewBox="0 0 80 56" className="w-full h-14">
-                            <rect x="3" y="5" width="74" height="46" fill="none" stroke={inkColor} strokeWidth="2.5" rx="1" />
-                            <rect x="6" y="8" width="68" height="40" fill="none" stroke={inkColor} strokeWidth="0.8" rx="0.5" />
-                            <line x1="6" y1="21" x2="74" y2="21" stroke={inkColor} strokeWidth="0.8" />
-                            <line x1="6" y1="40" x2="74" y2="40" stroke={inkColor} strokeWidth="0.8" />
-                            <text x="40" y="17" textAnchor="middle" fontSize="6.5" fontWeight="900" fill={inkColor} fontFamily="Arial">SCHOOL NAME</text>
-                            <text x="40" y="33" textAnchor="middle" fontSize="5.5" fontWeight="700" fill={inkColor} fontFamily="Arial">OFFICIAL STAMP</text>
-                            <text x="12" y="49" textAnchor="start" fontSize="4.5" fontWeight="700" fill={inkColor} fontFamily="Arial">CITY</text>
-                            <text x="68" y="49" textAnchor="end" fontSize="4.5" fontWeight="700" fill={inkColor} fontFamily="Arial">DATE: ___</text>
+                          <svg viewBox="0 0 80 56" className="w-full h-16">
+                            <rect x="2" y="3" width="76" height="50" fill="none" stroke={inkColor} strokeWidth="2.2" />
+                            <rect x="5" y="6" width="70" height="44" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <line x1="5" y1="18" x2="75" y2="18" stroke={inkColor} strokeWidth="0.8" />
+                            <line x1="5" y1="40" x2="75" y2="40" stroke={inkColor} strokeWidth="0.8" />
+                            <text x="40" y="14" textAnchor="middle" fontSize="5.2" fontWeight="900" fill={inkColor} fontFamily="serif">SCHOOL NAME</text>
+                            <path d="M12 24 L20 24 L20 30 Q20 33 16 35 Q12 33 12 30 Z" fill="none" stroke={inkColor} strokeWidth="0.7" />
+                            <text x="24" y="27" textAnchor="start" fontSize="4.5" fontWeight="900" fill={inkColor} fontFamily="sans-serif">OFFICIAL STAMP</text>
+                            <text x="24" y="34" textAnchor="start" fontSize="3.2" fontWeight="700" fill={inkColor} fontFamily="monospace">VERIFIED RECORD</text>
+                            <text x="10" y="47" textAnchor="start" fontSize="3.5" fontWeight="700" fill={inkColor} fontFamily="monospace">DATE: 2026</text>
+                            <text x="70" y="47" textAnchor="end" fontSize="3.5" fontWeight="700" fill={inkColor} fontFamily="monospace">SIGN: ____</text>
+                          </svg>
+                        ),
+                      },
+                      {
+                        key: "rosette",
+                        label: "Notary Starburst",
+                        badge: "Embossed",
+                        desc: "36-point scalloped notary seal for certified transcripts & certificates",
+                        preview: (
+                          <svg viewBox="0 0 64 64" className="w-full h-16">
+                            <circle cx="32" cy="32" r="30" fill="none" stroke={inkColor} strokeWidth="1.8" strokeDasharray="2.5 1.5" />
+                            <circle cx="32" cy="32" r="26" fill="none" stroke={inkColor} strokeWidth="0.8" strokeDasharray="1 1.2" />
+                            <circle cx="32" cy="32" r="24" fill="none" stroke={inkColor} strokeWidth="1.2" />
+                            <circle cx="32" cy="32" r="16" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <text x="32" y="14" textAnchor="middle" fontSize="4" fontWeight="900" fill={inkColor} fontFamily="serif">SCHOOL NAME</text>
+                            <path d="M28 26 L36 26 L36 32 Q36 36 32 38 Q28 36 28 32 Z" fill="none" stroke={inkColor} strokeWidth="0.8" />
+                            <rect x="23" y="40" width="18" height="4" fill="none" stroke={inkColor} strokeWidth="0.6" />
+                            <text x="32" y="43" textAnchor="middle" fontSize="3" fontWeight="900" fill={inkColor} fontFamily="sans-serif">CERTIFIED</text>
+                            <text x="32" y="53" textAnchor="middle" fontSize="3.5" fontWeight="700" fill={inkColor} fontFamily="serif">OFFICIAL SEAL</text>
                           </svg>
                         ),
                       },
@@ -1640,7 +1677,7 @@ function SettingsPage() {
                 <div>
                   <Label className="text-xs font-semibold">Official Designation / Center Wording</Label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {["OFFICIAL STAMP", "APPROVED & VERIFIED", "CERTIFIED TRUE COPY", "EXAMINATION OFFICE"].map((w) => (
+                    {["OFFICIAL SEAL", "APPROVED & VERIFIED", "CERTIFIED TRUE COPY", "EXAMINATION OFFICE"].map((w) => (
                       <button
                         key={w}
                         type="button"
@@ -1658,7 +1695,7 @@ function SettingsPage() {
                   <Input
                     value={stampSubText}
                     onChange={(e) => setStampSubText(e.target.value.toUpperCase())}
-                    placeholder="e.g. OFFICIAL STAMP"
+                    placeholder="e.g. OFFICIAL SEAL"
                     className="mt-2 font-mono text-xs uppercase"
                   />
                 </div>
@@ -1696,7 +1733,7 @@ function SettingsPage() {
                 {/* Canvas preview */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative rounded-2xl border-2 border-dashed border-border bg-[#f8f9fc] p-4 flex items-center justify-center"
-                    style={{ minHeight: 240 }}>
+                    style={{ minHeight: 280 }}>
                     {!stampRendered && !stampGenerating && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
                         <Stamp className="h-10 w-10 opacity-20" />
@@ -1710,8 +1747,8 @@ function SettingsPage() {
                     )}
                     <canvas
                       ref={stampCanvasRef}
-                      width={340}
-                      height={340}
+                      width={480}
+                      height={480}
                       className={`transition-opacity duration-300 ${stampRendered ? "opacity-100" : "opacity-0"}`}
                       style={{ width: 260, height: 260 }}
                     />

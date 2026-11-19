@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   BrainCircuit,
@@ -8,13 +8,16 @@ import {
   ShieldCheck,
   Sparkles,
   ChevronRight,
+  CalendarDays,
+  ClipboardCheck,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { generateSchoolAdminIntelligenceDb } from "@/lib/api/db.functions";
-import { getSchoolCode } from "@/lib/utils";
+import { getAdminToken, getSchoolCode } from "@/lib/utils";
 import { FormattedAiOutput } from "@/components/formatted-ai-output";
 
 export const Route = createFileRoute("/dashboard/ai")({
@@ -74,6 +77,7 @@ function AiOperationsBriefPage() {
     try {
       const result = await generateSchoolAdminIntelligenceDb({
         data: {
+          token: getAdminToken(),
           schoolCode: getSchoolCode(),
           workflow: selected,
           question: selected === "principal_copilot" ? question : undefined,
@@ -255,8 +259,32 @@ function AiOperationsBriefPage() {
               </div>
             </div>
           ) : output ? (
-            <div className="prose-sm max-w-none">
-              <FormattedAiOutput text={output} />
+            <div className="space-y-6">
+              <div className="prose-sm max-w-none">
+                <FormattedAiOutput text={output} />
+              </div>
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Continue in iCademia
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <Button asChild variant="outline" className="justify-start bg-background">
+                    <Link to="/dashboard/timetable">
+                      <CalendarDays className="mr-2 h-4 w-4" /> Review timetable
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="justify-start bg-background">
+                    <Link to="/dashboard/teachers">
+                      <UsersRound className="mr-2 h-4 w-4" /> Manage Head Teachers
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="justify-start bg-background">
+                    <Link to="/dashboard/results">
+                      <ClipboardCheck className="mr-2 h-4 w-4" /> Open Result Control
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">

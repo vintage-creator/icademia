@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Linkedin, Mail, Phone, Twitter } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MessageCircle, Phone, Twitter } from "lucide-react";
 
 export function SiteFooter() {
   return (
@@ -78,10 +78,18 @@ export function SiteFooter() {
             <Mail className="h-4 w-4 text-[#d6a84b]" /> hello@icademia.app
           </a>
           <a
-            href="tel:+2347065737817"
+            href="https://wa.me/2347065737817?text=Hello%20iCademia%2C%20please%20send%20me%20the%20bank%20account%20details%20for%20a%20school%20card%20transfer."
+            target="_blank"
+            rel="noreferrer"
             className="mt-3 flex items-center gap-2 text-sm text-white/70 hover:text-white"
           >
-            <Phone className="h-4 w-4 text-[#d6a84b]" /> 0706 573 7817, 0813 804 5718
+            <MessageCircle className="h-4 w-4 text-[#d6a84b]" /> WhatsApp transfer support: 0706 573 7817
+          </a>
+          <a
+            href="tel:+2348138045718"
+            className="mt-3 flex items-center gap-2 text-sm text-white/70 hover:text-white"
+          >
+            <Phone className="h-4 w-4 text-[#d6a84b]" /> Call support: 0813 804 5718
           </a>
         </div>
       </div>

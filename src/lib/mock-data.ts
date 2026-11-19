@@ -7,8 +7,13 @@ export interface SubjectScore {
   ca: number;
   exam: number;
   total: number;
-  grade: Grade;
+  grade: string;
   remark: string;
+  classAverage?: number;
+  classHighest?: number;
+  classLowest?: number;
+  classPosition?: number;
+  classSize?: number;
 }
 
 export interface StudentResult {
@@ -50,9 +55,9 @@ export interface StudentResult {
   responsibilities?: string;
   promotionStatus?: string;
   promotedToClass?: string;
-  classAverage: number;
-  highestAverage: number;
-  lowestAverage: number;
+  classAverage: number | null;
+  highestAverage: number | null;
+  lowestAverage: number | null;
   nextTermBegins: string;
   affectiveTraits: Array<{ label: string; rating: number }>;
   psychomotorSkills: Array<{ label: string; rating: number }>;

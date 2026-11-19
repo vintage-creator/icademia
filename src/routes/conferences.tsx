@@ -92,11 +92,11 @@ function Conferences() {
                 Practical conferences, masterclasses and retreats that strengthen pedagogy,
                 classroom wellbeing, assessment and the leadership behind excellent schools.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button
                   asChild
                   size="lg"
-                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90 sm:w-auto"
                 >
                   <a href="#programme">Explore past programmes</a>
                 </Button>
@@ -104,7 +104,7 @@ function Conferences() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white/25 bg-white/5 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+                  className="w-full border-white/25 bg-white/5 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground sm:w-auto"
                 >
                   <Link to="/register-school">Bring your school</Link>
                 </Button>
@@ -309,11 +309,11 @@ function Conferences() {
                   Partner schools will hear about new dates first.
                 </p>
                 {new Date(selected.event_date) >= new Date() ? (
-                  <Button asChild>
+                  <Button asChild className="w-full sm:w-auto">
                     <a href={selected.registration_link || "#"} target="_blank" rel="noreferrer">Register Now</a>
                   </Button>
                 ) : (
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
                     <Link to="/register-school">Register for future notices</Link>
                   </Button>
                 )}
