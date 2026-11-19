@@ -17,6 +17,7 @@ import { AcademicYearVisual } from "@/components/academic-year-visual";
 import { AccessCardVisual } from "@/components/scratch-card-showcase";
 import { StudentReportPreview } from "@/components/student-report-preview";
 import { SchoolReasonsVisual } from "@/components/school-reasons-carousel";
+import { PartnerSchoolsMarquee } from "@/components/partner-schools-marquee";
 import {
   Accordion,
   AccordionContent,
@@ -199,6 +200,9 @@ function Landing() {
             </div>
           </div>
         </section>
+
+        {/* Partner Schools Auto-sliding Marquee */}
+        <PartnerSchoolsMarquee />
 
         <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">

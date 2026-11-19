@@ -214,9 +214,30 @@
   animation: float-slow 6s ease-in-out infinite;
 }
 
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.ic-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll 30s linear infinite;
+}
+
+.ic-marquee-track:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-float,
-  .animate-hero-glow {
+  .animate-hero-glow,
+  .ic-marquee-track {
     animation: none;
   }
 }

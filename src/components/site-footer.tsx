@@ -1,5 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Linkedin, Mail, MessageCircle, Phone, Twitter } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
 
 export function SiteFooter() {
   return (
@@ -28,7 +36,7 @@ export function SiteFooter() {
             {[
               [Instagram, "Instagram", "https://instagram.com/icademia"],
               [Facebook, "Facebook", "https://facebook.com/icademia"],
-              [Twitter, "X", "https://x.com/icademia"],
+              [XIcon, "X (Twitter)", "https://x.com/icademia"],
               [Linkedin, "LinkedIn", "https://linkedin.com/company/icademia"],
             ].map(([Icon, label, href]) => (
               <a
